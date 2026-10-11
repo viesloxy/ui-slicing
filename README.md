@@ -60,6 +60,8 @@ cp -r ui-slicing ~/.claude/skills/    # or ~/.codex/skills/
 6. DELIVER     deviations & assumptions reported explicitly, never silently
 ```
 
+**Locked output contract** — every job delivers **one self-contained `index.html`** (inline CSS/JS, embedded design tokens, SVG placeholders) that previews instantly in Gemini Canvas, ChatGPT Canvas, Claude artifacts, or any browser. No "sometimes HTML, sometimes a Tailwind project" — one format, always. React only on explicit request.
+
 Core rules baked into the skill:
 
 - **The reference wins.** If the design uses three equal cards, Inter, or a centered hero — replicate it exactly. Slop is only when the AI *invents* these.

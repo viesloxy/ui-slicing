@@ -53,7 +53,7 @@ List slices top → bottom with purpose + a one-line ASCII wireframe each, and w
 - Reproduce real text from the reference (read it from crops). Lorem only when genuinely unreadable — then mark it.
 - Photos/illustrations can't be extracted: use placeholders with the exact aspect ratio, radius, and treatment; mark `<!-- TODO: asset -->`.
 - A static reference still ships with states: hover, focus-visible, active, disabled, and `prefers-reduced-motion` support.
-- Stack per user request: plain HTML+CSS is the default; React+Tailwind on request. When measured values miss the Tailwind scale, use arbitrary values (`p-[17px]`) — fidelity beats scale purity.
+- Stack: locked to the output contract — single self-contained `index.html` (or React-via-CDN single file when explicitly requested). When the user asked for Tailwind classes, arbitrary values (`p-[17px]`) keep fidelity — never round measured px to the scale.
 - Responsive: the reference shows one breakpoint. Extend sensibly (collapse columns, stack nav) instead of inventing a new design.
 
 ### 5. Verify against the reference
@@ -70,7 +70,7 @@ Final gate: run every check in [references/anti-slop-checklist.md](references/an
 
 ### 6. Deliver
 
-Ship code + tokens file + `slices/`. Report deviations and assumptions explicitly — never silently.
+Ship the complete `index.html` (code + embedded tokens; `slices/` stays local when scripts run). Report deviations and assumptions explicitly — never silently. Close with: what to replace (`TODO: asset`), and an invitation to name the off bands for a fix pass.
 
 ## Fidelity rules (the core)
 
@@ -80,4 +80,12 @@ Ship code + tokens file + `slices/`. Report deviations and assumptions explicitl
 4. **No invented content.** Metrics, testimonials, and logos visible in the reference are reproduced as-is; unreadable text gets a neutral placeholder marked ASSUMED. Inventing "+47% conversion" is slop.
 5. **Detail parity.** Input states, focus rings, transitions, empty states weigh as much as the hero — most rebuilt UIs die in the details, not the headline.
 
-Deep-dive docs: [references/analysis-protocol.md](references/analysis-protocol.md) (measurement + font identification) · [references/anti-slop-checklist.md](references/anti-slop-checklist.md) (pre-delivery gates).
+## Output contract (locked)
+
+The deliverable is **one self-contained `index.html`** — all CSS in one `<style>` block, all JS inline, tokens first, Google Fonts via `<link>` with system fallbacks, placeholders as inline SVG/data-URIs, no external images, no localStorage, no build step. It must render as a live preview in Gemini Canvas, ChatGPT Canvas, Claude artifacts, or any browser with zero setup.
+
+- **Never stop at analysis.** Deliver the complete runnable file in the same response. Analysis stays compact — it scaffolds the code, it is not the deliverable. If output hits the length limit, continue to finish the file unprompted; the user never asks twice.
+- **React only on explicit request.** "Modern stack" without specifics = React 18 via CDN inside the same single HTML file. A Vite/Tailwind project tree is only for users who explicitly want a codebase. Never improvise formats.
+- Full spec: [references/output-contract.md](references/output-contract.md).
+
+Deep-dive docs: [references/analysis-protocol.md](references/analysis-protocol.md) (measurement + font identification) · [references/anti-slop-checklist.md](references/anti-slop-checklist.md) (pre-delivery gates) · [references/output-contract.md](references/output-contract.md) (deliverable spec).
