@@ -1,53 +1,60 @@
-# Landing page — design plan
+# Landing page — design plan v2 (full redesign)
 
-Single self-contained page at `docs/` (GitHub Pages serves it at `viesloxy.github.io/ui-slicing/`). The page must practice what the skill preaches: measured tokens, one orchestrated motion moment, no slop. The memorable thing: **the page is a measuring instrument** — crosshair cursor, px readouts, crop brackets, section bands.
+V1 rejected: dark canvas + acid-lime accent + condensed poster caps = the Claude/Anthropic cluster (their own tell-list, gate 2). V2 pivots completely: **light studio/agency build**, normal-case grotesque + serif italic accents, one vivid orange accent, GSAP-driven motion. DNA sources switch from Zentry to the Awwwards-clone shelf.
 
 ## Reference DNA (from D:/Skills/web-design-inspiration)
 
 | Source | What we take |
 |---|---|
-| `04-Clone-Award-Winning/awwwards-zentry-clone` | palette trio: blue-tinted off-white `#DFDFF0`, violet `#5542FF`, acid lime `#EDFF67`; oversized condensed display caps |
-| `04-Clone-Award-Winning/dennis-snellenberg-portfolio` | disciplined spacing rhythm, hairline rules, quiet footer colophon |
-| `03-Situs-Legendaris/portfolio-2025` (davidhckh) | preloader-free instant load, mono micro-labels, dev-tool restraint |
+| `04-Clone-Award-Winning/dennis-snellenberg-portfolio` (PP Neue Montreal) | light editorial surface, one-family grotesque at display sizes with tight tracking, pill buttons with invert hover + arrow nudge, rotating circular badge, quiet top bar |
+| `04-Clone-Award-Winning/Obys-Clone-Gsap` | off-white + black + **signal orange `#FF4D00`** accent, GSAP text reveals, scroll choreography |
+| `04-Clone-Award-Winning/k72-website` | big statement typography, section rhythm via rules and whitespace only |
 
-Explicitly rejected (AI-slop clusters): purple→blue gradients, acid-green-on-black single-accent, centered-everything hero, 3-card icon grids, Inter everywhere, numbered eyebrows on non-sequences.
+Rejected tells (from our own checklist): cream+terracotta (Claude), dark+acid-lime (Claude cluster 2), Inter default, purple gradients, condensed all-caps posters, numbered eyebrows on non-sequences.
 
 ## Tokens
 
 ```
---ink:      #0F1014   (blue-tinted near-black; never #000)
---paper:    #E7E8EF   (blue-tinted off-white from Zentry DNA)
---paper-2:  #F2F2F7   (raised surface)
---violet:   #5542FF   (accent — links, CTAs, active marks; ≤5% of any viewport)
---lime:     #EDFF67   (measurement highlight ONLY — readouts, ticks; ≤2% of any viewport)
---rule:     rgba ink/paper 12–18% hairlines
-display:    'Anton' (condensed poster caps)
-body:       'Archivo' (400/500/700)
-mono:       'JetBrains Mono' (px labels, code, coordinates)
-spacing:    8px base grid; container 1200px; gutters 24/32
-radius:     0 default (instrument edges), 2px on interactive only
+--bg:        #F0EFEB   bone (neutral, not warm-cream; paired with vivid orange = agency, not Claude)
+--bg-2:      #E6E5DF   bone pressed (rows, code panels)
+--ink:       #141311   neutral near-black (never #000)
+--ink-60:    rgba(20,19,17,.60)
+--rule:      rgba(20,19,17,.14)
+--orange:    #FF4D00   signal accent (Obys) — CTAs, ticks, marquee, progress bar; ≤5% viewport
+--paper-inv: #F0EFEB   text on dark sections
+--dark:      #141311   dark section canvas
+display+body:'Instrument Sans' (400/500/600) — one family, tight tracking at display sizes
+serif accent:'Instrument Serif' italic — single emphasized words in headlines
+mono:        'JetBrains Mono' — labels, commands, coordinates (400/700)
+radius:      pills (999px) on buttons/badges; 0 on structural elements
+grid:        container 1200px, 12-col feel via splits; gutters 24/32; section pad 128px
 ```
 
 ## Layout (in order)
 
-1. **Topbar** — wordmark `ui‑slicing`, right: version tag + GitHub link. Hairline bottom.
-2. **Hero (dark)** — giant Anton caps: `SLICE ANY UI.` (filled) / `SHIP THE CODE.` (outlined stroke). Left-biased. Crosshair follows cursor with live px-coordinate readout (lime, mono). Crop brackets frame the headline. CTAs: `Get the skill` (violet solid) + `Star on GitHub` (hairline). Meta row: mono stats (6 steps · 3 scripts · 14 topics).
-3. **Ticker** — mono marquee: `FETCH → ANALYZE → SLICE → TOKENS → BUILD → COMPARE →` pauses on hover.
-4. **Problem (paper)** — "Generated UI fails two ways." Two spec rows (not cards): 01 Generic defaults / 02 Lazy approximation, each with tell-list in mono. Hairline separated.
-5. **Workflow (paper)** — the real sequence 01–06: ACQUIRE/ANALYZE/TOKENS/BUILD/VERIFY/DELIVER. Left rail: huge numerals; right: step name + 2-line description + mono command where real. Sticky left title.
-6. **Demo (dark)** — "See the slice." Left: inline-SVG mock reference (mini dashboard) framed by crop brackets with annotated px measurements (lime). Right: the matching rebuilt code (mono, syntax-tinted). Caption: measured, not guessed.
-7. **Anti-slop (paper)** — "Slop is inventing. Not matching." Gates as checklist rows with violet tick marks; callout: **the reference wins**.
-8. **Install (dark)** — per-platform rows: pi / Claude Code / Codex / Gemini & ChatGPT, mono install commands, copy button.
-9. **Footer (dark)** — single-line colophon: `ui-slicing — MIT — distilled from v0 · Hallmark · Anthropic skills` + back-to-top. No link columns.
+1. **Topbar** — wordmark left, right: `GitHub ★` text link + `Get the skill` orange pill. Hairline bottom. Scroll progress hairline (orange) at very top.
+2. **Hero (bone)** — kicker mono; headline 3 lines, line-masked GSAP reveal: `Turn any screenshot` / `into *pixel-perfect*` (serif italic orange word) / `front-end code.` Right column bottom-aligned: sub-copy + pill CTAs (`Get the skill ↓` orange, `Star on GitHub` outline). Bottom hairline meta row: 6-step workflow · 3 scripts · 58 gates · 1-file output. Rotating circular badge (SVG textPath, `SCROLL · EXPLORE · MEASURE ·`) pinned at hero right edge.
+3. **Marquee (orange bg, ink text)** — `FETCH → ANALYZE → SLICE → TOKENS → BUILD → COMPARE → DELIVER`, CSS loop, hover pause.
+4. **Problem (bone)** — editorial split rows: giant grotesque numerals 01/02 in outline, name + tell-list mono with orange keyword highlights. Closing statement with orange-highlighted rules.
+5. **Workflow (dark, PINNED horizontal scroll — desktop GSAP scrub)** — six panels slide horizontally while pinned; each panel: huge index numeral, step name, 2-line description, mono command where real. Mobile/reduced-motion: plain vertical stack.
+6. **Demo (bone)** — split: annotated SVG mock (crop brackets, lime→orange measurement tags) vs rebuilt token code panel (bone-2, mono). Figure gets scrub parallax (yPercent). Caption mono.
+7. **Anti-slop (bone)** — two-col compact gates with orange ticks; then full-width statement set in huge serif italic: `The reference wins.` + supporting paragraph.
+8. **Install (dark)** — 4 rows (pi / Claude Code / Codex / Gemini·ChatGPT) with pill copy buttons; row hover lifts background.
+9. **Footer (dark)** — giant bottom-aligned wordmark `ui-slicing` (outlined), colophon row, license + links.
 
-## Motion (one orchestrated moment, action-honest)
+## Motion inventory (GSAP 3 + ScrollTrigger via cdnjs — the "gacor" set)
 
-- Load: hero lines reveal once (clip-path, 600ms, stagger 80ms). Nothing else animates on load.
-- Cursor crosshair + px readout in hero only; `pointer: fine` only; disabled with reduced-motion.
-- Ticker marquee: CSS animation, pauses on hover/focus.
-- Scroll reveals: none. Hover states: instant color/border shifts.
-- All motion killed under `prefers-reduced-motion`.
+- Scroll progress hairline (orange) — scrub
+- Hero: line-mask stagger reveal on load (600ms, 80ms stagger, expo.out)
+- Section titles: yPercent clip reveal on enter, once
+- Workflow: pinned horizontal translate scrub (desktop, `min-width: 960px`, pointer fine)
+- Demo figure: yPercent parallax scrub
+- Magnetic pull on pill buttons (pointer fine only, lerp back on leave)
+- Circular badge: continuous rotation + scroll-velocity boost
+- Marquee: CSS keyframe loop, pause on hover/focus
+- Hovers: pill invert + arrow nudge, link underline slide-left, row background lift — instant, no bounce
+- `prefers-reduced-motion` / no-JS: everything visible, no motion, native scroll; GSAP loaded with `if (!reduced)` guard
 
 ## Quality floor
 
-Responsive 320–1920 no h-scroll; focus-visible rings (violet, instant); contrast ≥4.5:1 body / ≥3:1 large; semantic landmarks; OG meta tags; favicon inline SVG data-URI.
+Responsive 320–1920 no h-scroll (`overflow-x: clip` + inner wrappers), focus-visible rings (orange, instant), contrast ≥4.5:1 body / ≥3:1 large (orange used on dark for large/mono-bold only), landmarks + skip link, OG tags, inline SVG favicon. Verified via Edge headless at 1440 & 375 before delivery.
