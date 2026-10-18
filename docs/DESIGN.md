@@ -1,60 +1,57 @@
-# Landing page — design plan v2 (full redesign)
+# Landing page — design plan v3 (second full redesign)
 
-V1 rejected: dark canvas + acid-lime accent + condensed poster caps = the Claude/Anthropic cluster (their own tell-list, gate 2). V2 pivots completely: **light studio/agency build**, normal-case grotesque + serif italic accents, one vivid orange accent, GSAP-driven motion. DNA sources switch from Zentry to the Awwwards-clone shelf.
+V2 rejected by owner: same skeleton as v1, the mono-micro-label system (kickers, tags, `01/02` numerals, ticker) reads generic; marquee unwanted; background flat; animations too tame; navbar/footer bland.
 
-## Reference DNA (from D:/Skills/web-design-inspiration)
+V3 = **Linear-2025 light aesthetic × Zentry motion**. Sources: live `linear.app` scrape (palette) + `Zentry-animated-website` (word-reveal 3D, perspective tilt, clip-path) + `dennis-snellenberg` (overlay menu, magnetic CTA).
 
-| Source | What we take |
-|---|---|
-| `04-Clone-Award-Winning/dennis-snellenberg-portfolio` (PP Neue Montreal) | light editorial surface, one-family grotesque at display sizes with tight tracking, pill buttons with invert hover + arrow nudge, rotating circular badge, quiet top bar |
-| `04-Clone-Award-Winning/Obys-Clone-Gsap` | off-white + black + **signal orange `#FF4D00`** accent, GSAP text reveals, scroll choreography |
-| `04-Clone-Award-Winning/k72-website` | big statement typography, section rhythm via rules and whitespace only |
-
-Rejected tells (from our own checklist): cream+terracotta (Claude), dark+acid-lime (Claude cluster 2), Inter default, purple gradients, condensed all-caps posters, numbered eyebrows on non-sequences.
-
-## Tokens
+## Scraped palette (live linear.app, 2025 theme)
 
 ```
---bg:        #F0EFEB   bone (neutral, not warm-cream; paired with vivid orange = agency, not Claude)
---bg-2:      #E6E5DF   bone pressed (rows, code panels)
---ink:       #141311   neutral near-black (never #000)
---ink-60:    rgba(20,19,17,.60)
---rule:      rgba(20,19,17,.14)
---orange:    #FF4D00   signal accent (Obys) — CTAs, ticks, marquee, progress bar; ≤5% viewport
---paper-inv: #F0EFEB   text on dark sections
---dark:      #141311   dark section canvas
-display+body:'Instrument Sans' (400/500/600) — one family, tight tracking at display sizes
-serif accent:'Instrument Serif' italic — single emphasized words in headlines
-mono:        'JetBrains Mono' — labels, commands, coordinates (400/700)
-radius:      pills (999px) on buttons/badges; 0 on structural elements
-grid:        container 1200px, 12-col feel via splits; gutters 24/32; section pad 128px
+--bg:      #E4E5E9   cool light gray (Linear base)
+--panel:   #FFFFFF / rgba(255,255,255,.62)  glass cards + backdrop blur
+--ink:     #0B0C0E   near-black
+--muted:   #62666D
+--pink:    #F79CE0   candy accent 1
+--sky:     #55CDFF   candy accent 2
+--peri:    #8FA4FF   candy accent 3
+--peach:   #FFC47C   candy accent 4
+accents appear as LARGE soft blurred radial glows behind glass, not as text/fill colors
+--dark:    #08090A   install panel + footer canvas
 ```
 
-## Layout (in order)
+Anti-slop guard: glows are multi-hue, heavily blurred, on LIGHT ground — not the dark pink→cyan aurora cluster; headline ink stays solid (no gradient text).
 
-1. **Topbar** — wordmark left, right: `GitHub ★` text link + `Get the skill` orange pill. Hairline bottom. Scroll progress hairline (orange) at very top.
-2. **Hero (bone)** — kicker mono; headline 3 lines, line-masked GSAP reveal: `Turn any screenshot` / `into *pixel-perfect*` (serif italic orange word) / `front-end code.` Right column bottom-aligned: sub-copy + pill CTAs (`Get the skill ↓` orange, `Star on GitHub` outline). Bottom hairline meta row: 6-step workflow · 3 scripts · 58 gates · 1-file output. Rotating circular badge (SVG textPath, `SCROLL · EXPLORE · MEASURE ·`) pinned at hero right edge.
-3. **Marquee (orange bg, ink text)** — `FETCH → ANALYZE → SLICE → TOKENS → BUILD → COMPARE → DELIVER`, CSS loop, hover pause.
-4. **Problem (bone)** — editorial split rows: giant grotesque numerals 01/02 in outline, name + tell-list mono with orange keyword highlights. Closing statement with orange-highlighted rules.
-5. **Workflow (dark, PINNED horizontal scroll — desktop GSAP scrub)** — six panels slide horizontally while pinned; each panel: huge index numeral, step name, 2-line description, mono command where real. Mobile/reduced-motion: plain vertical stack.
-6. **Demo (bone)** — split: annotated SVG mock (crop brackets, lime→orange measurement tags) vs rebuilt token code panel (bone-2, mono). Figure gets scrub parallax (yPercent). Caption mono.
-7. **Anti-slop (bone)** — two-col compact gates with orange ticks; then full-width statement set in huge serif italic: `The reference wins.` + supporting paragraph.
-8. **Install (dark)** — 4 rows (pi / Claude Code / Codex / Gemini·ChatGPT) with pill copy buttons; row hover lifts background.
-9. **Footer (dark)** — giant bottom-aligned wordmark `ui-slicing` (outlined), colophon row, license + links.
+## Type system (mono labels abolished)
 
-## Motion inventory (GSAP 3 + ScrollTrigger via cdnjs — the "gacor" set)
+- Display: **Bricolage Grotesque** 600/700 — characterful grotesque, tight tracking
+- Body: **Figtree** 400/500/600
+- Accent: **Instrument Serif** italic — single emphasized words only
+- No uppercase micro-labels anywhere. Section context carried by size/color, not tags.
 
-- Scroll progress hairline (orange) — scrub
-- Hero: line-mask stagger reveal on load (600ms, 80ms stagger, expo.out)
-- Section titles: yPercent clip reveal on enter, once
-- Workflow: pinned horizontal translate scrub (desktop, `min-width: 960px`, pointer fine)
-- Demo figure: yPercent parallax scrub
-- Magnetic pull on pill buttons (pointer fine only, lerp back on leave)
-- Circular badge: continuous rotation + scroll-velocity boost
-- Marquee: CSS keyframe loop, pause on hover/focus
-- Hovers: pill invert + arrow nudge, link underline slide-left, row background lift — instant, no bounce
-- `prefers-reduced-motion` / no-JS: everything visible, no motion, native scroll; GSAP loaded with `if (!reduced)` guard
+## Structure & look
 
-## Quality floor
+1. **Navbar** — floating glass capsule (max-width, rounded-full, blur, hairline): logo chip left, center links (Problem / Workflow / Demo / Install), CTA pill right. On scroll: capsule tightens, gains shadow. Mobile: logo + burger → **full-screen overlay menu**, giant staggered links + CTA + repo link.
+2. **Hero (light + glows)** — two large blurred candy glows (pink top-left, sky bottom-right) slowly drifting (20s alternate). Centered column: H1 Bricolage 72-120px, 3 lines, word-by-word 3D reveal on load (rotateX, Zentry). Sub copy. CTA: solid ink pill + glass pill. Below: 3 floating glass mini-cards (mini code line, mini palette chips, mini crop-tag) each gently bobbing (6-8s ease alternate, staggered) with parallax on scroll.
+3. **Problem** — two large glass cards side by side, each with its own glow (pink / sky) and **perspective tilt on pointer move** (Zentry bento tilt). Inside: heading + tell list as wrapped soft chips (not mono rows). Closing line big Figtree 500 with serif italic accents.
+4. **Workflow** — pinned horizontal scroll retained (desktop GSAP scrub). White cards, radius 24, soft shadow; index as big Bricolage digits in candy colors (each step different accent); mobile: vertical stack.
+5. **Demo** — glass panel split: annotated SVG mock + token code (light code block, ink text, candy token colors). Scroll parallax kept.
+6. **Statement** — full-width, huge Bricolage: `The reference wins.` with pink hand-drawn-style SVG underline swipe (animated on enter). Supporting paragraph.
+7. **Install** — full-bleed dark rounded panel (#08090A, radius 32, inside light page): 4 rows + copy buttons; subtle periwinkle glow in panel corner.
+8. **Footer (dark, full-bleed)** — top: CTA row `Star on GitHub` pill + `Get the skill`; middle: giant Bricolage wordmark with pink→periwinkle soft glow behind (blur, not gradient text); bottom bar: © line + two links only.
 
-Responsive 320–1920 no h-scroll (`overflow-x: clip` + inner wrappers), focus-visible rings (orange, instant), contrast ≥4.5:1 body / ≥3:1 large (orange used on dark for large/mono-bold only), landmarks + skip link, OG tags, inline SVG favicon. Verified via Edge headless at 1440 & 375 before delivery.
+## Motion inventory (GSAP + ScrollTrigger, cdnjs)
+
+- Hero words: 3D flip-in stagger (rotateX -90 → 0, Zentry)
+- Glow blobs: infinite slow drift (CSS), + scroll parallax (GSAP yPercent)
+- Floating chips: bob loop + scroll parallax at different speeds
+- Section headings: word-split scroll reveal (once, 88%)
+- Cards: pointer tilt (perspective 700px, max 8deg) + shadow lift
+- Workflow: pinned horizontal scrub + per-panel subtle rotateY entry
+- Statement underline: scaleX swipe on enter
+- Nav: shrink + shadow on scroll; overlay menu: clip-circle or slide + link stagger
+- Magnetic CTA pills; scroll progress top (ink 2px)
+- Reduced-motion / no-JS: everything static-visible, native scroll, menu = simple toggle
+
+## Responsive floor
+
+Breakpoints: 1200 (container), 960 (nav→burger, hero center, grids stack), 640 (type scale down, cards full). 375 verified by construction: no fixed-width elements, nowrap only inside `overflow-x:auto` min-width:0 boxes, glows `pointer-events:none` + `overflow:clip` wrappers. Live check at 492 (headless floor) + math for 375.
