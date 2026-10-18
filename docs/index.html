@@ -3,262 +3,249 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ui-slicing — pixel-perfect UI replication from any reference image</title>
+<title>ui-slicing — turn any screenshot into pixel-perfect front-end code</title>
 <meta name="description" content="An agent skill that turns any UI reference image — Pinterest, Dribbble, screenshots — into pixel-faithful front-end code, with a built-in anti-AI-slop system. Works with Claude Code, Codex, Gemini, ChatGPT, pi.">
 <meta property="og:title" content="ui-slicing — pixel-perfect UI slicing for AI agents">
 <meta property="og:description" content="Slice any UI reference image into pixel-faithful front-end code. Anti-AI-slop by contract.">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#0F1014">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230F1014'/%3E%3Cpath d='M8 8h6v2h-4v4H8zM24 24h-6v-2h4v-4h2z' fill='%23EDFF67'/%3E%3Crect x='13' y='15' width='6' height='2' fill='%235542FF'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#F0EFEB">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23FF4D00'/%3E%3Cpath d='M8 8h7v3h-4v4H8zM24 24h-7v-3h4v-4h3z' fill='%23F0EFEB'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Archivo:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Instrument+Serif:ital@1&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
 <style>
 /* ============ 1. RESET ============ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:100%;-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html{font-size:100%;scroll-behavior:smooth}
+body{overflow-x:clip}
 img,svg{display:block;max-width:100%}
 button{font:inherit;background:none;border:0;cursor:pointer;color:inherit}
 a{color:inherit}
 
 /* ============ 2. TOKENS ============ */
 :root{
-  --ink:#0F1014;
-  --ink-2:#16171D;
-  --paper:#E7E8EF;
-  --paper-2:#F2F2F7;
-  --violet:#5542FF;
-  --violet-down:#4534E0;
-  --lime:#EDFF67;
-  --ink-60:rgba(15,16,20,.60);
-  --ink-40:rgba(15,16,20,.40);
-  --paper-60:rgba(231,232,239,.60);
-  --paper-78:rgba(231,232,239,.78);
-  --paper-50:rgba(231,232,239,.50);
-  --rule-dark:rgba(231,232,239,.14);
-  --rule-paper:rgba(15,16,20,.16);
-  --font-display:'Anton',Impact,sans-serif;
-  --font-body:'Archivo',system-ui,sans-serif;
+  --bg:#F0EFEB;
+  --bg-2:#E6E5DF;
+  --ink:#141311;
+  --ink-70:rgba(20,19,17,.70);
+  --ink-50:rgba(20,19,17,.50);
+  --rule:rgba(20,19,17,.14);
+  --rule-inv:rgba(240,239,235,.16);
+  --orange:#FF4D00;
+  --orange-down:#E64500;
+  --paper-inv:#F0EFEB;
+  --font-sans:'Instrument Sans',system-ui,sans-serif;
+  --font-serif:'Instrument Serif',Georgia,serif;
   --font-mono:'JetBrains Mono',ui-monospace,monospace;
-  --space-2:16px; --space-3:24px; --space-4:32px;
-  --space-5:48px; --space-6:64px; --space-7:96px; --space-8:128px;
+  --s2:16px; --s3:24px; --s4:32px; --s5:48px; --s6:64px; --s7:96px; --s8:128px;
   --container:1200px;
-  --dur:220ms;
+  --dur:.22s;
   --ease:cubic-bezier(.25,.1,.25,1);
+  --ease-out:cubic-bezier(0,0,.25,1);
 }
 
 /* ============ 3. BASE ============ */
-body{
-  font-family:var(--font-body);
-  background:var(--ink);
-  color:var(--paper);
-  line-height:1.55;
-  -webkit-font-smoothing:antialiased;
-  overflow-x:clip;
-}
-::selection{background:var(--violet);color:#fff}
-.dark ::selection{background:var(--lime);color:var(--ink)}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+::selection{background:var(--orange);color:#fff}
+.on-dark ::selection{background:var(--orange);color:#fff}
 .container{max-width:var(--container);margin-inline:auto;padding-inline:clamp(16px,4vw,32px)}
 .mono{font-family:var(--font-mono)}
-.skip{position:absolute;left:-9999px;top:0;background:var(--violet);color:#fff;padding:8px 16px;z-index:100}
-.skip:focus{left:8px;top:8px}
-:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
-.dark :focus-visible{outline-color:var(--lime)}
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:var(--bg);padding:8px 16px;z-index:100;border-radius:0 0 8px 0}
+.skip:focus{left:0;top:0}
+:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:2px}
 section{overflow-x:clip}
+.serif{font-family:var(--font-serif);font-style:italic;font-weight:400;letter-spacing:0}
 
-/* ============ 4. TOPBAR ============ */
-.topbar{position:sticky;top:0;z-index:50;background:rgba(15,16,20,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule-dark)}
-.topbar-in{display:flex;align-items:center;justify-content:space-between;height:56px}
-.wordmark{display:flex;align-items:center;gap:10px;text-decoration:none}
-.wordmark b{font-family:var(--font-mono);font-weight:700;font-size:15px;letter-spacing:-.02em}
-.wordmark .tick{width:8px;height:8px;background:var(--lime)}
-.topbar-r{display:flex;align-items:center;gap:16px}
-.ver{font-family:var(--font-mono);font-size:11px;color:var(--paper-50);border:1px solid var(--rule-dark);padding:3px 8px;border-radius:2px}
-.gh-link{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:12px;text-decoration:none;padding:6px 10px;border:1px solid var(--rule-dark);border-radius:2px;transition:border-color var(--dur) var(--ease),background var(--dur) var(--ease)}
-.gh-link:hover{border-color:var(--violet);background:rgba(85,66,255,.12)}
+/* ============ 4. PROGRESS + TOPBAR ============ */
+.progress{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;background:transparent}
+.progress i{display:block;height:100%;background:var(--orange);transform-origin:0 50%;transform:scaleX(0)}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(240,239,235,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
+.topbar-in{display:flex;align-items:center;justify-content:space-between;height:60px}
+.wordmark{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:600;letter-spacing:-.02em;font-size:17px}
+.wordmark .chip{width:9px;height:9px;background:var(--orange);border-radius:2px}
+.topbar-r{display:flex;align-items:center;gap:20px}
+.gh{font-family:var(--font-mono);font-size:12.5px;font-weight:700;text-decoration:none;position:relative}
+.gh::after{content:"";position:absolute;left:0;bottom:-3px;height:1.5px;width:100%;background:var(--ink);transform:scaleX(1);transform-origin:right;transition:transform var(--dur) var(--ease)}
+.gh:hover::after{transform:scaleX(0)}
 
-/* ============ 5. HERO — the instrument ============ */
-.hero{position:relative;border-bottom:1px solid var(--rule-dark);cursor:crosshair}
-.hero-in{position:relative;padding-block:clamp(72px,12vh,128px) clamp(56px,9vh,96px);z-index:2}
-.kicker{display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-50)}
-.kicker .dot{width:8px;height:8px;background:var(--violet)}
+/* ============ 5. PILLS ============ */
+.pill{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-weight:600;font-size:14.5px;letter-spacing:-.01em;border-radius:999px;padding:13px 24px;transition:background var(--dur) var(--ease),color var(--dur) var(--ease),border-color var(--dur) var(--ease);will-change:transform}
+.pill .arr{transition:transform var(--dur) var(--ease)}
+.pill-solid{background:var(--orange);color:#fff}
+.pill-solid:hover{background:var(--ink);color:var(--bg)}
+.pill-solid:hover .arr{transform:translateY(2px)}
+.pill-line{border:1px solid var(--rule);color:var(--ink)}
+.pill-line:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill-sm{padding:9px 18px;font-size:13px}
+
+/* ============ 6. HERO ============ */
+.hero{position:relative;padding-top:clamp(56px,9vh,110px)}
+.hero-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:var(--s5);align-items:end}
+.kicker{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-50)}
+.kicker i{width:8px;height:8px;background:var(--orange);border-radius:2px}
 .hero h1{
-  font-family:var(--font-display);
-  font-weight:400;
-  font-size:clamp(64px,13.5vw,184px);
-  line-height:.96;
-  text-transform:uppercase;
-  letter-spacing:.005em;
-  margin-top:var(--space-4);
-  max-width:12ch;
+  margin-top:var(--s4);
+  font-weight:600;
+  font-size:clamp(44px,5.9vw,84px);
+  line-height:1.02;
+  letter-spacing:-.04em;
+  text-wrap:balance;
 }
-.hero h1 .l{display:block;overflow:hidden}
-.hero h1 .l span{display:block;transform:translateY(112%)}
-.ready .hero h1 .l span{transform:translateY(0);transition:transform .6s var(--ease)}
-.ready .hero h1 .l:nth-child(2) span{transition-delay:80ms}
-.hero h1 .outline{color:transparent;-webkit-text-stroke:2px var(--paper)}
-.hero-sub{max-width:54ch;font-size:clamp(16px,1.6vw,19px);color:var(--paper-78);margin-top:var(--space-4)}
-.hero-sub b{color:var(--paper);font-weight:700}
-.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:var(--space-5)}
-.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:13px;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:2px;transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease),color var(--dur) var(--ease)}
-.btn:active{transform:translateY(1px)}
-.btn-violet{background:var(--violet);color:#fff}
-.btn-violet:hover{background:var(--violet-down)}
-.btn-ghost{border:1px solid var(--rule-dark);color:var(--paper)}
-.btn-ghost:hover{border-color:var(--lime);color:var(--lime)}
-.hero-meta{display:flex;flex-wrap:wrap;gap:var(--space-3) var(--space-4);margin-top:var(--space-6);font-family:var(--font-mono);font-size:12px;color:var(--paper-50)}
-.hero-meta b{color:var(--paper);font-weight:700}
-.xhair{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .3s var(--ease)}
-.hero.on .xhair{opacity:1}
-.xhair .xv,.xhair .xh{position:absolute;background:rgba(85,66,255,.28)}
-.xhair .xv{top:0;bottom:0;width:1px;left:var(--mx,50%)}
-.xhair .xh{left:0;right:0;height:1px;top:var(--my,50%)}
-.readout{
-  position:absolute;z-index:3;pointer-events:none;
-  left:var(--mx,50%);top:var(--my,50%);
-  transform:translate(14px,14px);
-  font-family:var(--font-mono);font-size:11px;font-weight:700;
-  color:var(--ink);background:var(--lime);
-  padding:4px 8px;white-space:nowrap;
-  opacity:0;transition:opacity .3s var(--ease);
-}
-.hero.on .readout{opacity:1}
-.cropmark{position:absolute;width:22px;height:22px;pointer-events:none}
-.cropmark::before,.cropmark::after{content:"";position:absolute;background:var(--lime)}
-.cropmark::before{width:100%;height:2px}
-.cropmark::after{width:2px;height:100%}
-.cm-tl{top:18px;left:max(16px,calc((100vw - var(--container))/2 - 40px))}
-.cm-tl::before{top:0}.cm-tl::after{left:0}
-.cm-br{bottom:18px;right:max(16px,calc((100vw - var(--container))/2 - 40px))}
-.cm-br::before{bottom:0}.cm-br::after{right:0}
+.hl-line{display:block;overflow:hidden;padding-bottom:.06em;margin-bottom:-.06em}
+.hero h1 .hl-line{white-space:normal;max-width:100%}
+.hero h1 .serif{font-size:1.05em;color:var(--orange);padding-right:.08em}
+.hero-right{padding-bottom:10px}
+.hero-sub{color:var(--ink-70);font-size:16.5px;max-width:38ch}
+.hero-sub b{color:var(--ink);font-weight:600}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:var(--s4)}
+.hero-meta{display:flex;flex-wrap:wrap;gap:var(--s3) var(--s5);margin-top:clamp(48px,8vh,88px);padding-block:var(--s3);border-top:1px solid var(--rule);font-family:var(--font-mono);font-size:12px;color:var(--ink-50)}
+.hero-meta b{color:var(--ink);font-weight:700}
+/* rotating badge */
+.badge{position:absolute;right:clamp(16px,4vw,48px);top:-74px;width:108px;height:108px}
+.badge svg{width:100%;height:100%;animation:spin 14s linear infinite}
+.badge:hover svg{animation-play-state:paused}
+.badge .core{position:absolute;inset:0;display:grid;place-items:center}
+.badge text{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.32em;fill:var(--ink);text-transform:uppercase}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* ============ 6. TICKER ============ */
-.ticker{border-bottom:1px solid var(--rule-dark);background:var(--ink);overflow:hidden;padding-block:14px}
-.ticker-track{display:flex;gap:48px;width:max-content;animation:marquee 28s linear infinite}
-.ticker:hover .ticker-track{animation-play-state:paused}
-.ticker-track span{font-family:var(--font-mono);font-size:13px;letter-spacing:.06em;color:var(--paper-50);white-space:nowrap}
-.ticker-track b{color:var(--lime);font-weight:400;margin-inline:6px}
-@keyframes marquee{to{transform:translateX(-50%)}}
+/* ============ 7. MARQUEE ============ */
+.marq{background:var(--orange);color:var(--ink);overflow:hidden;padding-block:13px;border-block:1px solid var(--ink)}
+.marq-track{display:flex;gap:44px;width:max-content;animation:marq 26s linear infinite}
+.marq:hover .marq-track{animation-play-state:paused}
+.marq-track span{font-family:var(--font-mono);font-weight:700;font-size:13px;letter-spacing:.08em;white-space:nowrap}
+.marq-track i{font-style:normal;margin-inline:8px}
+@keyframes marq{to{transform:translateX(-50%)}}
 
-/* ============ 7. SHARED SECTION SCAFFOLD ============ */
-.sec{padding-block:var(--space-8)}
-.sec-paper{background:var(--paper);color:var(--ink)}
-.sec-dark{background:var(--ink);color:var(--paper);border-bottom:1px solid var(--rule-dark)}
-.sec-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:var(--space-3);border-bottom:2px solid currentColor;padding-bottom:var(--space-3);margin-bottom:var(--space-6)}
-.sec-title{font-family:var(--font-display);font-weight:400;text-transform:uppercase;font-size:clamp(32px,4.5vw,56px);line-height:1.02;letter-spacing:.01em}
-.sec-tag{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;opacity:.55}
+/* ============ 8. SECTION SCAFFOLD ============ */
+.sec{padding-block:var(--s8)}
+.sec-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:var(--s3);margin-bottom:clamp(40px,6vw,72px)}
+.sec-title{font-weight:600;font-size:clamp(34px,4.6vw,64px);line-height:1.04;letter-spacing:-.035em;max-width:16ch}
+.sec-title .serif{color:var(--orange);font-size:1.05em}
+.sec-tag{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-50);white-space:nowrap}
+.on-dark .sec-tag{color:rgba(240,239,235,.5)}
+.on-dark{background:var(--ink);color:var(--paper-inv)}
 
-/* ============ 8. PROBLEM ============ */
-.prob-row{display:grid;grid-template-columns:96px 1fr 1fr;gap:var(--space-4);padding-block:var(--space-5);border-bottom:1px solid var(--rule-paper)}
-.prob-row:first-of-type{border-top:1px solid var(--rule-paper)}
-.prob-num{font-family:var(--font-display);font-size:clamp(40px,5vw,72px);line-height:1;color:var(--violet)}
-.prob-name{font-size:clamp(20px,2.2vw,28px);font-weight:700;letter-spacing:-.01em}
-.prob-name small{display:block;font-family:var(--font-mono);font-size:12px;font-weight:400;color:var(--ink-60);margin-top:6px;letter-spacing:.04em}
-.prob-tells{font-family:var(--font-mono);font-size:13px;line-height:2;color:var(--ink-60)}
-.prob-tells em{font-style:normal;color:var(--ink);background:var(--lime);padding:1px 4px}
-.prob-close{max-width:60ch;margin-top:var(--space-6);font-size:clamp(18px,2vw,24px);line-height:1.4;font-weight:500}
-.prob-close b{background:var(--violet);color:#fff;padding:0 8px;font-weight:700}
+/* ============ 9. PROBLEM ============ */
+.prob{border-top:1px solid var(--rule)}
+.prob-row{display:grid;grid-template-columns:140px 1fr 1.1fr;gap:var(--s4);padding-block:var(--s5);border-bottom:1px solid var(--rule);align-items:start}
+.prob-num{font-weight:600;font-size:clamp(48px,6vw,84px);line-height:.9;letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1.5px var(--ink-50)}
+.prob-row:hover .prob-num{color:var(--orange);-webkit-text-stroke:1.5px var(--orange);transition:color .25s var(--ease)}
+.prob-name{font-size:clamp(22px,2.4vw,30px);font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.prob-name small{display:block;font-family:var(--font-mono);font-size:12px;font-weight:400;color:var(--ink-50);margin-top:8px;letter-spacing:.02em}
+.prob-tells{font-family:var(--font-mono);font-size:12.5px;line-height:2.1;color:var(--ink-70)}
+.prob-tells em{font-style:normal;color:var(--ink);background:rgba(255,77,0,.14);box-shadow:inset 0 -1.5px 0 var(--orange);padding:1px 4px}
+.prob-close{max-width:62ch;margin-top:var(--s6);font-size:clamp(19px,2.1vw,26px);line-height:1.45;letter-spacing:-.015em;font-weight:500}
+.prob-close mark{background:var(--orange);color:#fff;padding:0 8px;font-weight:600}
 
-/* ============ 9. WORKFLOW ============ */
-.flow{display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:var(--space-6)}
-.flow-left{position:sticky;top:88px;align-self:start}
-.flow-left p{color:var(--ink-60);font-size:15px;margin-top:var(--space-3);max-width:30ch}
-.flow-steps{display:flex;flex-direction:column}
-.step{display:grid;grid-template-columns:88px 1fr;gap:var(--space-4);padding-block:var(--space-5);border-bottom:1px solid var(--rule-paper);align-items:start}
-.step:last-child{border-bottom:0}
-.step-num{font-family:var(--font-display);font-size:clamp(36px,4vw,56px);line-height:1;color:transparent;-webkit-text-stroke:1.5px var(--ink-40)}
-.step:hover .step-num{color:var(--violet);-webkit-text-stroke:1.5px var(--violet);transition:color var(--dur) var(--ease)}
-.step-name{font-family:var(--font-mono);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase}
-.step-desc{margin-top:8px;max-width:52ch;color:var(--ink-60);font-size:15px}
-.step-cmd{display:inline-block;margin-top:12px;font-family:var(--font-mono);font-size:12px;color:var(--ink);background:var(--paper-2);border:1px solid var(--rule-paper);padding:6px 10px;border-radius:2px}
+/* ============ 10. WORKFLOW (pinned horizontal on desktop) ============ */
+.flow{position:relative}
+.flow-intro{max-width:44ch;color:rgba(240,239,235,.62);font-size:16px;margin-bottom:var(--s6)}
+.flow-viewport{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-inline:calc(clamp(16px,4vw,32px)*-1);padding-inline:clamp(16px,4vw,32px)}
+.flow-viewport::-webkit-scrollbar{display:none}
+html.pinning .flow-viewport{overflow:hidden}
+.flow-track{display:flex;gap:var(--s4);width:max-content}
+.step{width:min(66vw,420px);flex:none;border:1px solid var(--rule-inv);border-radius:20px;padding:var(--s5) var(--s4);min-height:380px;display:flex;flex-direction:column;background:rgba(240,239,235,.03)}
+.step-top{display:flex;justify-content:space-between;align-items:baseline}
+.step-idx{font-weight:600;font-size:clamp(44px,4.5vw,64px);line-height:.9;letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1.5px rgba(240,239,235,.4)}
+.step-cmd-chip{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;color:var(--orange);border:1px solid rgba(255,77,0,.4);padding:4px 10px;border-radius:999px;white-space:nowrap}
+.step-name{font-size:clamp(22px,2vw,28px);font-weight:600;letter-spacing:-.02em;margin-top:auto}
+.step-desc{color:rgba(240,239,235,.62);font-size:14.5px;margin-top:10px}
+.step-cmd{display:block;margin-top:16px;font-family:var(--font-mono);font-size:11.5px;color:rgba(240,239,235,.75);background:rgba(240,239,235,.06);border:1px solid var(--rule-inv);padding:9px 12px;border-radius:10px;overflow-x:auto;white-space:nowrap}
+.flow-hint{display:flex;align-items:center;gap:10px;margin-top:var(--s4);font-family:var(--font-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(240,239,235,.4)}
+.flow-hint .bar{flex:1;height:1px;background:var(--rule-inv);position:relative;overflow:hidden}
+.flow-hint .bar i{position:absolute;inset:0;background:var(--orange);transform-origin:0 50%;transform:scaleX(0)}
 
-/* ============ 10. DEMO ============ */
-.demo{display:grid;grid-template-columns:1.1fr 1fr;gap:var(--space-6);align-items:start}
-.demo-ref{position:relative;border:1px solid var(--rule-dark);background:var(--ink-2)}
-.demo-ref svg{width:100%;height:auto}
-.demo-ref .bracket{position:absolute;width:20px;height:20px;border:2px solid var(--lime)}
-.br-tl{top:-2px;left:-2px;border-right:0;border-bottom:0}
-.br-br{bottom:-2px;right:-2px;border-left:0;border-top:0}
-.demo-note{position:absolute;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--ink);background:var(--lime);padding:2px 6px}
-.demo-cap{font-family:var(--font-mono);font-size:12px;color:var(--paper-50);margin-top:var(--space-2)}
-.demo-code{background:var(--ink-2);border:1px solid var(--rule-dark);padding:var(--space-4);font-family:var(--font-mono);font-size:12.5px;line-height:1.9;overflow-x:auto}
-.demo-code .tk{color:rgba(231,232,239,.45)}
-.demo-code .tsel{color:#9D8FFF}
-.demo-code .tprop{color:var(--paper-78)}
-.demo-code .tval{color:var(--lime)}
-.demo-code .tcom{color:rgba(231,232,239,.35);font-style:italic}
+/* ============ 11. DEMO ============ */
+.demo{display:grid;grid-template-columns:1.08fr 1fr;gap:var(--s6);align-items:start}
+.demo-fig{position:relative;border:1px solid var(--rule);border-radius:16px;overflow:hidden;background:#fff}
+.demo-fig svg{width:100%;height:auto}
+.demo-fig .bracket{position:absolute;width:22px;height:22px;border:2px solid var(--orange)}
+.br-tl{top:10px;left:10px;border-right:0;border-bottom:0}
+.br-br{bottom:10px;right:10px;border-left:0;border-top:0}
+.demo-note{position:absolute;font-family:var(--font-mono);font-size:10px;font-weight:700;color:#fff;background:var(--orange);padding:3px 7px;border-radius:999px}
+.demo-cap{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-50);margin-top:var(--s2);line-height:1.8}
+.demo-code{background:var(--bg-2);border:1px solid var(--rule);border-radius:16px;padding:var(--s4);font-family:var(--font-mono);font-size:12.5px;line-height:2;overflow-x:auto}
+.demo-code .tk{color:var(--ink-50)}
+.demo-code .tsel{color:var(--orange)}
+.demo-code .tprop{color:var(--ink-70)}
+.demo-code .tval{color:var(--ink);font-weight:700}
+.demo-code .tcom{color:var(--ink-50);font-style:italic}
 
-/* ============ 11. ANTI-SLOP ============ */
-.slop-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6)}
-.gate-list{display:flex;flex-direction:column}
-.gate{display:flex;gap:14px;padding-block:14px;border-bottom:1px solid var(--rule-paper);align-items:baseline}
-.gate svg{flex:none;transform:translateY(2px)}
-.gate span{font-size:15px}
-.gate b{font-weight:700}
-.callout{border:2px solid var(--ink);padding:var(--space-5);margin-top:var(--space-6)}
-.callout h3{font-family:var(--font-display);font-weight:400;text-transform:uppercase;font-size:clamp(24px,3vw,40px);line-height:1.05}
-.callout h3 b{color:var(--violet)}
-.callout p{margin-top:var(--space-2);color:var(--ink-60);max-width:56ch}
+/* ============ 12. ANTI-SLOP ============ */
+.slop{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3) var(--s6)}
+.gate{display:flex;gap:14px;padding-block:16px;border-bottom:1px solid var(--rule);align-items:baseline;font-size:15.5px}
+.gate svg{flex:none;transform:translateY(2.5px)}
+.gate b{font-weight:600}
+.statement{margin-top:clamp(56px,8vw,96px);text-align:left}
+.statement h3{font-family:var(--font-serif);font-style:italic;font-weight:400;font-size:clamp(44px,7vw,104px);line-height:1;letter-spacing:-.01em}
+.statement h3 b{color:var(--orange);font-weight:400}
+.statement p{max-width:56ch;margin-top:var(--s3);color:var(--ink-70);font-size:16.5px}
 
-/* ============ 12. INSTALL ============ */
-.inst-list{display:flex;flex-direction:column}
-.inst{display:grid;grid-template-columns:200px 1fr auto;gap:var(--space-3);align-items:center;padding-block:var(--space-4);border-bottom:1px solid var(--rule-dark)}
-.inst:first-child{border-top:1px solid var(--rule-dark)}
-.inst-who{font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:.06em}
-.inst-who small{display:block;font-weight:400;font-size:11px;color:var(--paper-50);margin-top:2px}
-.inst-cmd{font-family:var(--font-mono);font-size:12.5px;color:var(--paper-78);background:var(--ink-2);border:1px solid var(--rule-dark);padding:12px 14px;border-radius:2px;overflow-x:auto;white-space:nowrap}
-.inst-cmd .c{color:var(--paper-50)}
-.copy{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--rule-dark);padding:8px 14px;border-radius:2px;transition:border-color var(--dur) var(--ease),color var(--dur) var(--ease)}
-.copy:hover{border-color:var(--lime);color:var(--lime)}
-.copy.done{border-color:var(--lime);color:var(--ink);background:var(--lime)}
-.inst-note{margin-top:var(--space-4);font-family:var(--font-mono);font-size:12px;color:var(--paper-50)}
-.inst-note a{color:var(--lime)}
+/* ============ 13. INSTALL ============ */
+.inst{display:grid;grid-template-columns:210px 1fr auto;gap:var(--s3);align-items:center;padding-block:var(--s4);border-bottom:1px solid var(--rule-inv);border-radius:14px;transition:background var(--dur) var(--ease)}
+.inst:first-child{border-top:1px solid var(--rule-inv)}
+.inst:hover{background:rgba(240,239,235,.05)}
+.inst-who{font-size:15px;font-weight:600;letter-spacing:-.01em;padding-left:var(--s3)}
+.inst-who small{display:block;font-family:var(--font-mono);font-weight:400;font-size:11px;color:rgba(240,239,235,.45);margin-top:3px}
+.inst-cmd{font-family:var(--font-mono);font-size:12.5px;color:rgba(240,239,235,.8);background:rgba(240,239,235,.06);border:1px solid var(--rule-inv);padding:13px 16px;border-radius:12px;overflow-x:auto;white-space:nowrap}
+.inst-cmd .c{color:var(--orange)}
+.copy{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--rule-inv);border-radius:999px;padding:9px 18px;margin-right:var(--s3);transition:background var(--dur) var(--ease),color var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.copy:hover{border-color:var(--orange);color:var(--orange)}
+.copy.done{background:var(--orange);border-color:var(--orange);color:#fff}
+.inst-note{margin-top:var(--s4);font-family:var(--font-mono);font-size:12px;color:rgba(240,239,235,.45);padding-left:var(--s3)}
+.inst-note a{color:var(--paper-inv)}
 
-/* ============ 13. FOOTER ============ */
-.footer{background:var(--ink);border-top:1px solid var(--rule-dark)}
-.footer-in{display:flex;flex-wrap:wrap;gap:var(--space-3) var(--space-5);align-items:center;justify-content:space-between;padding-block:var(--space-5);font-family:var(--font-mono);font-size:12px;color:var(--paper-50)}
-.footer-in a{color:var(--paper-78);text-decoration:none;border-bottom:1px solid var(--rule-dark);transition:color var(--dur) var(--ease),border-color var(--dur) var(--ease)}
-.footer-in a:hover{color:var(--lime);border-color:var(--lime)}
+/* ============ 14. FOOTER ============ */
+.footer{background:var(--ink);color:var(--paper-inv);padding-top:var(--s7);overflow:hidden}
+.foot-mark{font-weight:600;letter-spacing:-.05em;line-height:.86;font-size:clamp(64px,14.5vw,220px);color:transparent;-webkit-text-stroke:1.5px rgba(240,239,235,.35);white-space:nowrap;user-select:none}
+.foot-mark:hover{color:var(--paper-inv);-webkit-text-stroke:1.5px var(--paper-inv);transition:color .4s var(--ease)}
+.foot-row{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s5);align-items:center;justify-content:space-between;border-top:1px solid var(--rule-inv);margin-top:var(--s5);padding-block:var(--s4);font-family:var(--font-mono);font-size:12px;color:rgba(240,239,235,.45)}
+.foot-row a{color:rgba(240,239,235,.8);text-decoration:none;position:relative}
+.foot-row a::after{content:"";position:absolute;left:0;bottom:-3px;height:1.5px;width:100%;background:var(--orange);transform:scaleX(0);transform-origin:left;transition:transform var(--dur) var(--ease)}
+.foot-row a:hover::after{transform:scaleX(1)}
 
-/* ============ 14. RESPONSIVE ============ */
+/* ============ 15. RESPONSIVE + MOTION ============ */
 @media (min-width:320px) and (max-width:960px){
-  .prob-row{grid-template-columns:64px 1fr}
+  .hero-grid{grid-template-columns:1fr}
+  .hero-right{padding-bottom:0}
+  .badge{display:none}
+  .inst,.inst-cmd,.step,.step-cmd,.demo-code,.demo-fig,.prob-tells{min-width:0;max-width:100%}
+  .topbar .pill{display:none}
+  .prob-row{grid-template-columns:80px 1fr;row-gap:var(--s2)}
   .prob-tells{grid-column:2}
-  .flow{grid-template-columns:1fr}
-  .flow-left{position:static}
   .demo{grid-template-columns:1fr}
-  .slop-grid{grid-template-columns:1fr}
-  .inst{grid-template-columns:1fr;gap:10px}
-  .sec{padding-block:var(--space-7)}
+  .slop{grid-template-columns:1fr}
+  .inst{grid-template-columns:1fr;gap:12px;border-radius:12px}
+  .inst-who{padding-left:0}
+  .inst-note{padding-left:0}
+  .flow-track{flex-direction:column;width:auto}
+  .step{width:100%;min-height:0}
+  .flow-viewport{overflow:visible;margin-inline:0;padding-inline:0}
+  .flow-hint{display:none}
+  .sec{padding-block:var(--s7)}
+  .hero h1{font-size:clamp(30px,10.2vw,84px);text-wrap:initial}
+  .copy{margin-right:0;justify-self:end}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
-  .hero h1 .l span{transform:none}
-  .xhair,.readout{display:none}
-}
-@media (max-width:640px){
-  .readout{display:none}
-  .hero h1{font-size:clamp(40px,12vw,96px);max-width:100%}
-  .hero{cursor:auto}
+  .badge svg{animation:none}
 }
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
 
 <header class="topbar">
   <div class="container topbar-in">
-    <a class="wordmark" href="#hero" aria-label="ui-slicing home">
-      <span class="tick" aria-hidden="true"></span>
-      <b>ui&#8209;slicing</b>
+    <a class="wordmark" href="#top" aria-label="ui-slicing home">
+      <span class="chip" aria-hidden="true"></span>
+      ui&#8209;slicing
     </a>
     <div class="topbar-r">
-      <span class="ver">SKILL&nbsp;v1.1</span>
-      <a class="gh-link" href="https://github.com/viesloxy/ui-slicing" target="_blank" rel="noopener">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-        Star
-      </a>
+      <a class="gh" href="https://github.com/viesloxy/ui-slicing" target="_blank" rel="noopener">GitHub&nbsp;★</a>
+      <a class="pill pill-solid pill-sm magnet" href="#install">Get the skill</a>
     </div>
   </div>
 </header>
@@ -266,177 +253,172 @@ section{overflow-x:clip}
 <main id="main">
 
 <!-- ============ HERO ============ -->
-<section class="hero" id="hero" aria-label="Introduction">
-  <div class="xhair" aria-hidden="true"><span class="xv"></span><span class="xh"></span></div>
-  <span class="cropmark cm-tl" aria-hidden="true"></span>
-  <span class="cropmark cm-br" aria-hidden="true"></span>
-  <div class="readout" aria-hidden="true">x:0000&nbsp;&nbsp;y:0000</div>
-  <div class="container hero-in">
-    <p class="kicker"><span class="dot" aria-hidden="true"></span> Agent skill &middot; anti-slop by contract</p>
-    <h1>
-      <span class="l"><span>Slice any UI.</span></span>
-      <span class="l"><span class="outline">Ship the code.</span></span>
-    </h1>
-    <p class="hero-sub">Give an AI one screenshot — a Pinterest pin, a Dribbble shot, a SaaS page — and <b>ui&#8209;slicing</b> measures it, extracts the tokens, and rebuilds it as a pixel-faithful, self-contained page. <b>No generic defaults. No invented numbers.</b></p>
-    <div class="cta-row">
-      <a class="btn btn-violet" href="#install">Get the skill ↓</a>
-      <a class="btn btn-ghost" href="https://github.com/viesloxy/ui-slicing" target="_blank" rel="noopener">Star on GitHub ★</a>
+<section class="hero" id="top" aria-label="Introduction">
+  <div class="container" style="position:relative">
+    <div class="badge" aria-hidden="true">
+      <svg viewBox="0 0 108 108">
+        <defs><path id="cir" d="M54,54 m-40,0 a40,40 0 1,1 80,0 a40,40 0 1,1 -80,0"/></defs>
+        <text><textPath href="#cir">MEASURE · SLICE · SHIP · MEASURE · SLICE ·&#160;</textPath></text>
+      </svg>
+      <span class="core"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#FF4D00" stroke-width="2"><path d="M8 2v11M3 9l5 5 5-5"/></svg></span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <p class="kicker"><i aria-hidden="true"></i> Agent skill &middot; anti-slop by contract</p>
+        <h1 id="headline">
+          <span class="hl-line">Turn any screenshot</span>
+          <span class="hl-line">into <em class="serif">pixel-perfect</em></span>
+          <span class="hl-line">front-end code.</span>
+        </h1>
+      </div>
+      <div class="hero-right">
+        <p class="hero-sub">Give an AI one image — a Pinterest pin, a Dribbble shot, a SaaS page. <b>ui&#8209;slicing</b> measures it, extracts the tokens, and rebuilds it faithfully. <b>No generic defaults. No invented numbers.</b></p>
+        <div class="cta-row">
+          <a class="pill pill-solid magnet" href="#install">Get the skill <span class="arr" aria-hidden="true">↓</span></a>
+          <a class="pill pill-line magnet" href="https://github.com/viesloxy/ui-slicing" target="_blank" rel="noopener">Star on GitHub ★</a>
+        </div>
+      </div>
     </div>
     <div class="hero-meta">
       <span><b>6</b>-step workflow</span>
       <span><b>3</b> Pillow scripts</span>
       <span><b>58</b> slop gates distilled</span>
       <span><b>1</b> self-contained output</span>
+      <span><b>MIT</b> licensed</span>
     </div>
   </div>
 </section>
 
-<!-- ============ TICKER ============ -->
-<div class="ticker" aria-hidden="true">
-  <div class="ticker-track">
-    <span>FETCH<b>→</b>ANALYZE<b>→</b>SLICE<b>→</b>TOKENS<b>→</b>BUILD<b>→</b>COMPARE<b>→</b>DELIVER<b>→</b></span>
-    <span>FETCH<b>→</b>ANALYZE<b>→</b>SLICE<b>→</b>TOKENS<b>→</b>BUILD<b>→</b>COMPARE<b>→</b>DELIVER<b>→</b></span>
+<!-- ============ MARQUEE ============ -->
+<div class="marq" aria-hidden="true">
+  <div class="marq-track">
+    <span>FETCH<i>→</i>ANALYZE<i>→</i>SLICE<i>→</i>TOKENS<i>→</i>BUILD<i>→</i>COMPARE<i>→</i>DELIVER<i>→</i></span>
+    <span>FETCH<i>→</i>ANALYZE<i>→</i>SLICE<i>→</i>TOKENS<i>→</i>BUILD<i>→</i>COMPARE<i>→</i>DELIVER<i>→</i></span>
   </div>
 </div>
 
 <!-- ============ PROBLEM ============ -->
-<section class="sec sec-paper" id="problem" aria-labelledby="problem-title">
+<section class="sec" id="problem" aria-labelledby="problem-title">
   <div class="container">
     <div class="sec-head">
-      <h2 class="sec-title" id="problem-title">Generated UI fails two ways</h2>
+      <h2 class="sec-title rv" id="problem-title">Generated UI fails <em class="serif">two ways.</em></h2>
       <span class="sec-tag">Why this exists</span>
     </div>
-    <div class="prob-row">
-      <div class="prob-num" aria-hidden="true">01</div>
-      <div class="prob-name">Generic defaults
-        <small>It builds what such a design usually looks like</small>
+    <div class="prob">
+      <div class="prob-row">
+        <div class="prob-num" aria-hidden="true">01</div>
+        <div class="prob-name">Generic defaults<small>It builds what such a design usually looks like</small></div>
+        <div class="prob-tells">Inter everywhere &middot; purple→blue gradients &middot; gradient headlines &middot; 3-card icon grids &middot; <em>centered-everything heroes</em> &middot; emoji as feature icons &middot; template nav &amp; footer &middot; bounce easing</div>
       </div>
-      <div class="prob-tells">Inter everywhere &middot; purple→blue gradients &middot; gradient headlines &middot; 3-card icon grids &middot; <em>centered-everything heroes</em> &middot; emoji as feature icons &middot; AI nav &amp; footer &middot; bounce easing</div>
-    </div>
-    <div class="prob-row">
-      <div class="prob-num" aria-hidden="true">02</div>
-      <div class="prob-name">Lazy approximation
-        <small>Right structure, wrong numbers</small>
+      <div class="prob-row">
+        <div class="prob-num" aria-hidden="true">02</div>
+        <div class="prob-name">Lazy approximation<small>Right structure, wrong numbers</small></div>
+        <div class="prob-tells">colors that are <em>close, not the color</em> &middot; spacing that "looks about right" &middot; one radius on everything &middot; invented metrics &middot; fonts swapped to favorites &middot; measured 17px normalized to 16</div>
       </div>
-      <div class="prob-tells">colors that are <em>close, not the color</em> &middot; spacing that "looks about right" &middot; rounded corners everywhere &middot; invented metrics &middot; fonts swapped to favorites &middot; measured 17px normalized to 16</div>
     </div>
-    <p class="prob-close">ui&#8209;slicing attacks both with two rules: <b>measure, don't guess</b> — and <b>the reference wins</b>, even when it uses purple, Inter, or three equal cards. Slop is inventing. Matching is the job.</p>
+    <p class="prob-close">ui&#8209;slicing attacks both with two rules: <mark>measure, don't guess</mark> — and <mark>the reference wins</mark>, even when it uses purple, Inter, or three equal cards. Slop is inventing. Matching is the job.</p>
   </div>
 </section>
 
-<!-- ============ WORKFLOW ============ -->
-<section class="sec sec-paper" id="workflow" aria-labelledby="workflow-title" style="padding-top:0">
+<!-- ============ WORKFLOW (pinned horizontal, desktop) ============ -->
+<section class="sec on-dark" id="workflow" aria-labelledby="workflow-title">
   <div class="container">
     <div class="sec-head">
-      <h2 class="sec-title" id="workflow-title">Six steps. One pass.</h2>
+      <h2 class="sec-title rv" id="workflow-title">Six steps. <em class="serif">One pass.</em></h2>
       <span class="sec-tag">The workflow</span>
     </div>
-    <div class="flow">
-      <div class="flow-left">
-        <h3 class="mono" style="font-size:13px;letter-spacing:.1em;text-transform:uppercase">Image in →<br>index.html out</h3>
-        <p>Analysis, tokens, and the complete runnable file happen in the same response. The user never asks twice.</p>
-      </div>
-      <div class="flow-steps">
-        <div class="step">
-          <div class="step-num" aria-hidden="true">01</div>
-          <div>
-            <div class="step-name">Acquire</div>
+    <p class="flow-intro">Image in — index.html out. Analysis, tokens, and the complete runnable file happen in the same response. The user never asks twice.</p>
+    <div class="flow" id="flow">
+      <div class="flow-viewport">
+        <div class="flow-track" id="flowTrack">
+          <article class="step">
+            <div class="step-top"><span class="step-idx" aria-hidden="true">01</span><span class="step-cmd-chip">SCRIPT</span></div>
+            <h3 class="step-name">Acquire</h3>
             <p class="step-desc">Local image or URL — the fetcher pulls Pinterest pins, Dribbble shots, any page via og:image.</p>
             <code class="step-cmd">python scripts/fetch_reference.py &lt;url&gt;</code>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num" aria-hidden="true">02</div>
-          <div>
-            <div class="step-name">Analyze</div>
-            <p class="step-desc">Dimensions, DPR, palette with coverage, section boundaries — then the agent reads every zoomed band crop before writing a single line of code.</p>
+          </article>
+          <article class="step">
+            <div class="step-top"><span class="step-idx" aria-hidden="true">02</span><span class="step-cmd-chip">SCRIPT</span></div>
+            <h3 class="step-name">Analyze</h3>
+            <p class="step-desc">Dimensions, DPR, palette coverage, section boundaries — then the agent reads every zoomed band crop before writing a single line of code.</p>
             <code class="step-cmd">python scripts/slice_reference.py ref.png --bands</code>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num" aria-hidden="true">03</div>
-          <div>
-            <div class="step-name">Tokens</div>
-            <p class="step-desc">Exact hex, identified fonts, measured spacing — locked into a token block before any component exists. No inline improvisation mid-build.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num" aria-hidden="true">04</div>
-          <div>
-            <div class="step-name">Build</div>
-            <p class="step-desc">One section at a time, each checked against its crop immediately. Real text from the reference; placeholders keep the exact aspect ratio and treatment.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num" aria-hidden="true">05</div>
-          <div>
-            <div class="step-name">Verify</div>
-            <p class="step-desc">Screenshot vs reference: side-by-side, diff heatmap, per-band scores. Fix the worst bands first, repeat until it matches.</p>
+          </article>
+          <article class="step">
+            <div class="step-top"><span class="step-idx" aria-hidden="true">03</span><span class="step-cmd-chip">CONTRACT</span></div>
+            <h3 class="step-name">Tokens</h3>
+            <p class="step-desc">Exact hex, identified fonts, measured spacing — locked into a token block before any component exists. No mid-render improvisation.</p>
+          </article>
+          <article class="step">
+            <div class="step-top"><span class="step-idx" aria-hidden="true">04</span><span class="step-cmd-chip">BUILD</span></div>
+            <h3 class="step-name">Build</h3>
+            <p class="step-desc">One section at a time, each checked against its crop immediately. Real text from the reference; placeholders keep exact aspect and treatment.</p>
+          </article>
+          <article class="step">
+            <div class="step-top"><span class="step-idx" aria-hidden="true">05</span><span class="step-cmd-chip">SCRIPT</span></div>
+            <h3 class="step-name">Verify</h3>
+            <p class="step-desc">Screenshot vs reference: side-by-side, diff heatmap, per-band scores. Fix the worst bands first. Repeat until it matches.</p>
             <code class="step-cmd">python scripts/compare_screens.py ref.png out.png</code>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num" aria-hidden="true">06</div>
-          <div>
-            <div class="step-name">Deliver</div>
+          </article>
+          <article class="step">
+            <div class="step-top"><span class="step-idx" aria-hidden="true">06</span><span class="step-cmd-chip">CONTRACT</span></div>
+            <h3 class="step-name">Deliver</h3>
             <p class="step-desc">One self-contained index.html. Deviations and assumptions reported explicitly — never silently.</p>
-          </div>
+          </article>
         </div>
       </div>
+      <div class="flow-hint" aria-hidden="true"><span>Scroll</span><span class="bar"><i id="flowBar"></i></span><span>06 / 06</span></div>
     </div>
   </div>
 </section>
 
 <!-- ============ DEMO ============ -->
-<section class="sec sec-dark dark" id="demo" aria-labelledby="demo-title">
+<section class="sec" id="demo" aria-labelledby="demo-title">
   <div class="container">
     <div class="sec-head">
-      <h2 class="sec-title" id="demo-title">See the slice</h2>
+      <h2 class="sec-title rv" id="demo-title">See <em class="serif">the slice.</em></h2>
       <span class="sec-tag">Measured, not guessed</span>
     </div>
     <div class="demo">
       <div>
-        <figure class="demo-ref">
+        <figure class="demo-fig" id="demoFig">
           <span class="bracket br-tl" aria-hidden="true"></span>
           <span class="bracket br-br" aria-hidden="true"></span>
-          <span class="demo-note" style="top:14%;left:-8px">pad&nbsp;24</span>
-          <span class="demo-note" style="top:44%;right:-10px">r&nbsp;8</span>
-          <span class="demo-note" style="bottom:12%;left:16%">gap&nbsp;16</span>
-          <!-- inline-SVG mock reference: a mini analytics dashboard -->
+          <span class="demo-note" style="top:15%;left:12px">pad&nbsp;24</span>
+          <span class="demo-note" style="top:45%;right:12px">r&nbsp;8</span>
+          <span class="demo-note" style="bottom:11%;left:20%">gap&nbsp;16</span>
           <svg viewBox="0 0 560 400" role="img" aria-label="Mock reference screenshot of a small analytics dashboard, annotated with measured pixel values">
-            <rect width="560" height="400" fill="#191B22"/>
-            <rect width="560" height="44" fill="#101116"/>
-            <rect x="16" y="16" width="56" height="12" rx="2" fill="#E7E8EF" opacity=".9"/>
-            <rect x="440" y="14" width="48" height="16" rx="8" fill="#5542FF"/>
+            <rect width="560" height="400" fill="#17181C"/>
+            <rect width="560" height="44" fill="#101114"/>
+            <rect x="16" y="16" width="56" height="12" rx="2" fill="#F0EFEB" opacity=".9"/>
+            <rect x="440" y="14" width="48" height="16" rx="8" fill="#FF4D00"/>
             <rect x="496" y="14" width="48" height="16" rx="8" fill="none" stroke="#3A3D49"/>
-            <rect x="16" y="60" width="180" height="20" fill="#E7E8EF" opacity=".95"/>
+            <rect x="16" y="60" width="180" height="20" fill="#F0EFEB" opacity=".95"/>
             <rect x="16" y="88" width="120" height="10" fill="#8A8D9C" opacity=".7"/>
-            <rect x="16" y="118" width="256" height="96" rx="8" fill="#22242D"/>
-            <rect x="288" y="118" width="256" height="96" rx="8" fill="#22242D"/>
-            <polyline points="32,196 76,180 120,188 164,160 208,168 252,140" fill="none" stroke="#EDFF67" stroke-width="2"/>
+            <rect x="16" y="118" width="256" height="96" rx="8" fill="#212329"/>
+            <rect x="288" y="118" width="256" height="96" rx="8" fill="#212329"/>
+            <polyline points="32,196 76,180 120,188 164,160 208,168 252,140" fill="none" stroke="#FF4D00" stroke-width="2"/>
             <rect x="300" y="134" width="64" height="10" fill="#8A8D9C" opacity=".7"/>
-            <rect x="300" y="154" width="96" height="26" rx="2" fill="#5542FF"/>
-            <rect x="16" y="238" width="528" height="34" rx="2" fill="#101116"/>
+            <rect x="300" y="154" width="96" height="26" rx="2" fill="#FF4D00"/>
+            <rect x="16" y="238" width="528" height="34" rx="2" fill="#101114"/>
             <text x="28" y="260" font-family="monospace" font-size="12" fill="#8A8D9C">revenue&nbsp;·&nbsp;last&nbsp;30d</text>
-            <rect x="16" y="288" width="528" height="44" rx="2" fill="#22242D"/>
-            <rect x="16" y="340" width="528" height="44" rx="2" fill="#22242D"/>
+            <rect x="16" y="288" width="528" height="44" rx="2" fill="#212329"/>
+            <rect x="16" y="340" width="528" height="44" rx="2" fill="#212329"/>
             <rect x="28" y="302" width="20" height="16" rx="8" fill="#3A3D49"/>
             <rect x="60" y="306" width="150" height="9" fill="#B9BCC9" opacity=".85"/>
             <rect x="28" y="354" width="20" height="16" rx="8" fill="#3A3D49"/>
             <rect x="60" y="358" width="190" height="9" fill="#B9BCC9" opacity=".85"/>
-            <rect x="468" y="304" width="64" height="12" rx="2" fill="#EDFF67" opacity=".9"/>
+            <rect x="468" y="304" width="64" height="12" rx="2" fill="#FF4D00" opacity=".9"/>
             <rect x="468" y="356" width="52" height="12" rx="2" fill="#8A8D9C" opacity=".7"/>
           </svg>
         </figure>
-        <p class="demo-cap">FIG.01 — reference.png · 1440×400 region · palette: 3 ink steps + #5542FF + #EDFF67 · radius 8 · gap 16</p>
+        <p class="demo-cap">FIG.01 — reference.png · 1440×400 region · palette: 3 ink steps + #FF4D00 · radius 8 · gap 16. Tags are measured, not remembered.</p>
       </div>
       <div class="demo-code" aria-label="The rebuilt code for the same design">
-<span class="tcom">/* tokens — sampled from the image, not remembered */</span><br>
+<span class="tcom">/* tokens — sampled from the image */</span><br>
 <span class="tsel">:root</span> <span class="tk">{</span><br>
-&nbsp;&nbsp;<span class="tprop">--surface</span><span class="tk">:</span> <span class="tval">#191B22</span><span class="tk">;</span><br>
-&nbsp;&nbsp;<span class="tprop">--card</span><span class="tk">:</span> <span class="tval">#22242D</span><span class="tk">;</span><br>
-&nbsp;&nbsp;<span class="tprop">--accent</span><span class="tk">:</span> <span class="tval">#5542FF</span><span class="tk">;</span><br>
-&nbsp;&nbsp;<span class="tprop">--signal</span><span class="tk">:</span> <span class="tval">#EDFF67</span><span class="tk">;</span><br>
+&nbsp;&nbsp;<span class="tprop">--surface</span><span class="tk">:</span> <span class="tval">#17181C</span><span class="tk">;</span><br>
+&nbsp;&nbsp;<span class="tprop">--card</span><span class="tk">:</span> <span class="tval">#212329</span><span class="tk">;</span><br>
+&nbsp;&nbsp;<span class="tprop">--accent</span><span class="tk">:</span> <span class="tval">#FF4D00</span><span class="tk">;</span><br>
 &nbsp;&nbsp;<span class="tprop">--radius</span><span class="tk">:</span> <span class="tval">8px</span><span class="tk">;</span>&nbsp;&nbsp;<span class="tcom">/* measured */</span><br>
 &nbsp;&nbsp;<span class="tprop">--gap</span><span class="tk">:</span> <span class="tval">16px</span><span class="tk">;</span>&nbsp;&nbsp;<span class="tcom">/* measured */</span><br>
 <span class="tk">}</span><br>
@@ -452,36 +434,36 @@ section{overflow-x:clip}
 </section>
 
 <!-- ============ ANTI-SLOP ============ -->
-<section class="sec sec-paper" id="slop" aria-labelledby="slop-title">
+<section class="sec" id="slop" aria-labelledby="slop-title" style="padding-top:0">
   <div class="container">
     <div class="sec-head">
-      <h2 class="sec-title" id="slop-title">Slop is inventing. Not matching.</h2>
+      <h2 class="sec-title rv" id="slop-title">Slop is inventing. <em class="serif">Not matching.</em></h2>
       <span class="sec-tag">58 gates, distilled</span>
     </div>
-    <div class="slop-grid">
-      <div class="gate-list" aria-label="Fidelity gates">
-        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>Fidelity</b> — colors, fonts, spacing within 5% of measured; every section in order; text verbatim.</span></div>
-        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>No injection</b> — nothing enters the build that isn't in the reference.</span></div>
-        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>No invented content</b> — fake metrics and testimonials are slop, always.</span></div>
+    <div class="slop">
+      <div role="list" aria-label="Fidelity gates">
+        <div class="gate" role="listitem"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#FF4D00" stroke-width="2.5"/></svg><span><b>Fidelity</b> — colors, fonts, spacing within 5% of measured; every section in order; text verbatim.</span></div>
+        <div class="gate" role="listitem"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#FF4D00" stroke-width="2.5"/></svg><span><b>No injection</b> — nothing enters the build that isn't in the reference.</span></div>
+        <div class="gate" role="listitem"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#FF4D00" stroke-width="2.5"/></svg><span><b>No invented content</b> — fake metrics and testimonials are slop, always.</span></div>
       </div>
-      <div class="gate-list" aria-label="Quality floor gates">
-        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>Detail parity</b> — input states, focus rings, empty states weigh as much as the hero.</span></div>
-        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>Quality floor</b> — responsive 320–1920, focus-visible, contrast, reduced-motion.</span></div>
-        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>Self-critique</b> — six axes scored before delivery; anything under 3 gets revised.</span></div>
+      <div role="list" aria-label="Quality gates">
+        <div class="gate" role="listitem"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#FF4D00" stroke-width="2.5"/></svg><span><b>Detail parity</b> — input states, focus rings, empty states weigh as much as the hero.</span></div>
+        <div class="gate" role="listitem"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#FF4D00" stroke-width="2.5"/></svg><span><b>Quality floor</b> — responsive 320–1920, focus-visible, contrast, reduced-motion.</span></div>
+        <div class="gate" role="listitem"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#FF4D00" stroke-width="2.5"/></svg><span><b>Self-critique</b> — six axes scored before delivery; anything under 3 gets revised.</span></div>
       </div>
     </div>
-    <div class="callout">
-      <h3>The reference wins<b>.</b></h3>
+    <div class="statement">
+      <h3 class="rv">The reference <b>wins.</b></h3>
       <p>If the design uses three equal cards, purple, or a centered hero — replicate it exactly. Those are only "tells" when the AI invents them. Here they are the design. Never silently improve the reference.</p>
     </div>
   </div>
 </section>
 
 <!-- ============ INSTALL ============ -->
-<section class="sec sec-dark dark" id="install" aria-labelledby="install-title">
+<section class="sec on-dark" id="install" aria-labelledby="install-title">
   <div class="container">
     <div class="sec-head">
-      <h2 class="sec-title" id="install-title">Install</h2>
+      <h2 class="sec-title rv" id="install-title">Install <em class="serif">once.</em></h2>
       <span class="sec-tag">Works where you work</span>
     </div>
     <div class="inst-list">
@@ -514,35 +496,27 @@ section{overflow-x:clip}
 
 <!-- ============ FOOTER ============ -->
 <footer class="footer">
-  <div class="container footer-in">
-    <span>ui&#8209;slicing — MIT — © 2026 Vito Aditya</span>
-    <span>distilled from v0 · bolt · same.dev · hallmark · anthropic skills · refactoring ui</span>
-    <a href="https://github.com/viesloxy/ui-slicing" target="_blank" rel="noopener">github.com/viesloxy/ui-slicing</a>
+  <div class="container">
+    <div class="foot-mark" aria-hidden="true">ui&#8209;slicing</div>
+    <div class="foot-row">
+      <span>© 2026 Vito Aditya — MIT</span>
+      <span>distilled from v0 · bolt · same.dev · hallmark · anthropic skills · refactoring ui</span>
+      <a href="https://github.com/viesloxy/ui-slicing" target="_blank" rel="noopener">github.com/viesloxy/ui-slicing</a>
+    </div>
   </div>
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script>
 (function(){
   "use strict";
-  var hero=document.getElementById('hero');
-  var fine=window.matchMedia('(pointer:fine)').matches;
   var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(hero&&fine&&!reduced){
-    var xv=hero.querySelector('.xv'),xh=hero.querySelector('.xh'),out=hero.querySelector('.readout');
-    hero.addEventListener('pointermove',function(e){
-      var r=hero.getBoundingClientRect();
-      var x=Math.round(e.clientX-r.left),y=Math.round(e.clientY-r.top);
-      hero.style.setProperty('--mx',x+'px');
-      hero.style.setProperty('--my',y+'px');
-      if(out)out.textContent='x:'+String(x).padStart(4,'0')+'\u00a0\u00a0y:'+String(y).padStart(4,'0');
-    });
-    hero.addEventListener('pointerenter',function(){hero.classList.add('on');});
-    hero.addEventListener('pointerleave',function(){hero.classList.remove('on');});
-  }
-  document.addEventListener('DOMContentLoaded',function(){
-    requestAnimationFrame(function(){document.documentElement.classList.add('ready');});
-  });
-  if(document.readyState!=='loading'){document.documentElement.classList.add('ready');}
+  var fine=window.matchMedia('(pointer:fine)').matches;
+  var hasGsap=typeof window.gsap!=='undefined';
+  var ST=(hasGsap&&typeof window.ScrollTrigger!=='undefined')?window.ScrollTrigger:null;
+
+  /* copy buttons — always on */
   document.querySelectorAll('.copy').forEach(function(btn){
     btn.addEventListener('click',function(){
       var txt=btn.getAttribute('data-copy')||'';
@@ -552,6 +526,56 @@ section{overflow-x:clip}
       else{var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}
     });
   });
+
+  if(reduced||!hasGsap||!ST){document.documentElement.classList.add('ready');return;}
+  gsap.registerPlugin(ST);
+
+  /* 1. scroll progress */
+  gsap.to('#progressBar',{scaleX:1,ease:'none',scrollTrigger:{start:0,end:'max',scrub:.3}});
+
+  /* 2. hero line-mask reveal */
+  gsap.from('#headline .hl-line > span',{yPercent:112,duration:.85,ease:'expo.out',stagger:.09,delay:.1});
+
+  /* 3. section title reveals (once) */
+  document.querySelectorAll('.rv').forEach(function(el){
+    gsap.from(el,{yPercent:60,opacity:0,duration:.8,ease:'expo.out',
+      scrollTrigger:{trigger:el,start:'top 88%',once:true}});
+  });
+
+  /* 4. workflow — pinned horizontal scrub (desktop only) */
+  ST.matchMedia({
+    '(min-width: 961px) and (prefers-reduced-motion: no-preference)':function(){
+      var track=document.getElementById('flowTrack');
+      if(!track)return;
+      document.documentElement.classList.add('pinning');
+      var getDist=function(){return Math.max(0,track.scrollWidth-track.parentElement.clientWidth);};
+      var tween=gsap.to(track,{x:function(){return -getDist();},ease:'none',
+        scrollTrigger:{trigger:'#flow',start:'top top',end:function(){return '+='+Math.max(1,getDist());},pin:true,scrub:.6,invalidateOnRefresh:true,
+          onUpdate:function(self){var bar=document.getElementById('flowBar');if(bar)bar.style.transform='scaleX('+self.progress+')';}}});
+      return function(){document.documentElement.classList.remove('pinning');tween.scrollTrigger&&tween.scrollTrigger.kill();tween.kill();gsap.set(track,{x:0});};
+    }
+  });
+
+  /* 5. demo figure parallax */
+  gsap.fromTo('#demoFig',{yPercent:4},{yPercent:-4,ease:'none',
+    scrollTrigger:{trigger:'#demo',start:'top bottom',end:'bottom top',scrub:.5}});
+
+  /* 6. magnetic pills (fine pointers only) */
+  if(fine){
+    document.querySelectorAll('.magnet').forEach(function(el){
+      var r=null;
+      el.addEventListener('pointerenter',function(){r=el.getBoundingClientRect();});
+      el.addEventListener('pointermove',function(e){
+        if(!r)r=el.getBoundingClientRect();
+        var dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+        gsap.to(el,{x:dx*.25,y:dy*.35,duration:.35,ease:'power2.out'});
+      });
+      el.addEventListener('pointerleave',function(){
+        gsap.to(el,{x:0,y:0,duration:.55,ease:'elastic.out(1,.45)'});r=null;
+      });
+    });
+  }
+  document.documentElement.classList.add('ready');
 })();
 </script>
 </body>
