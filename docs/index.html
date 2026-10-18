@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ui-slicing — pixel-perfect UI replication from any reference image</title>
+<meta name="description" content="An agent skill that turns any UI reference image — Pinterest, Dribbble, screenshots — into pixel-faithful front-end code, with a built-in anti-AI-slop system. Works with Claude Code, Codex, Gemini, ChatGPT, pi.">
+<meta property="og:title" content="ui-slicing — pixel-perfect UI slicing for AI agents">
+<meta property="og:description" content="Slice any UI reference image into pixel-faithful front-end code. Anti-AI-slop by contract.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0F1014">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230F1014'/%3E%3Cpath d='M8 8h6v2h-4v4H8zM24 24h-6v-2h4v-4h2z' fill='%23EDFF67'/%3E%3Crect x='13' y='15' width='6' height='2' fill='%235542FF'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Archivo:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ============ 1. RESET ============ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:100%;-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+img,svg{display:block;max-width:100%}
+button{font:inherit;background:none;border:0;cursor:pointer;color:inherit}
+a{color:inherit}
+
+/* ============ 2. TOKENS ============ */
+:root{
+  --ink:#0F1014;
+  --ink-2:#16171D;
+  --paper:#E7E8EF;
+  --paper-2:#F2F2F7;
+  --violet:#5542FF;
+  --violet-down:#4534E0;
+  --lime:#EDFF67;
+  --ink-60:rgba(15,16,20,.60);
+  --ink-40:rgba(15,16,20,.40);
+  --paper-60:rgba(231,232,239,.60);
+  --paper-78:rgba(231,232,239,.78);
+  --paper-50:rgba(231,232,239,.50);
+  --rule-dark:rgba(231,232,239,.14);
+  --rule-paper:rgba(15,16,20,.16);
+  --font-display:'Anton',Impact,sans-serif;
+  --font-body:'Archivo',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --space-2:16px; --space-3:24px; --space-4:32px;
+  --space-5:48px; --space-6:64px; --space-7:96px; --space-8:128px;
+  --container:1200px;
+  --dur:220ms;
+  --ease:cubic-bezier(.25,.1,.25,1);
+}
+
+/* ============ 3. BASE ============ */
+body{
+  font-family:var(--font-body);
+  background:var(--ink);
+  color:var(--paper);
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:clip;
+}
+::selection{background:var(--violet);color:#fff}
+.dark ::selection{background:var(--lime);color:var(--ink)}
+.container{max-width:var(--container);margin-inline:auto;padding-inline:clamp(16px,4vw,32px)}
+.mono{font-family:var(--font-mono)}
+.skip{position:absolute;left:-9999px;top:0;background:var(--violet);color:#fff;padding:8px 16px;z-index:100}
+.skip:focus{left:8px;top:8px}
+:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+.dark :focus-visible{outline-color:var(--lime)}
+section{overflow-x:clip}
+
+/* ============ 4. TOPBAR ============ */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(15,16,20,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule-dark)}
+.topbar-in{display:flex;align-items:center;justify-content:space-between;height:56px}
+.wordmark{display:flex;align-items:center;gap:10px;text-decoration:none}
+.wordmark b{font-family:var(--font-mono);font-weight:700;font-size:15px;letter-spacing:-.02em}
+.wordmark .tick{width:8px;height:8px;background:var(--lime)}
+.topbar-r{display:flex;align-items:center;gap:16px}
+.ver{font-family:var(--font-mono);font-size:11px;color:var(--paper-50);border:1px solid var(--rule-dark);padding:3px 8px;border-radius:2px}
+.gh-link{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:12px;text-decoration:none;padding:6px 10px;border:1px solid var(--rule-dark);border-radius:2px;transition:border-color var(--dur) var(--ease),background var(--dur) var(--ease)}
+.gh-link:hover{border-color:var(--violet);background:rgba(85,66,255,.12)}
+
+/* ============ 5. HERO — the instrument ============ */
+.hero{position:relative;border-bottom:1px solid var(--rule-dark);cursor:crosshair}
+.hero-in{position:relative;padding-block:clamp(72px,12vh,128px) clamp(56px,9vh,96px);z-index:2}
+.kicker{display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-50)}
+.kicker .dot{width:8px;height:8px;background:var(--violet)}
+.hero h1{
+  font-family:var(--font-display);
+  font-weight:400;
+  font-size:clamp(64px,13.5vw,184px);
+  line-height:.96;
+  text-transform:uppercase;
+  letter-spacing:.005em;
+  margin-top:var(--space-4);
+  max-width:12ch;
+}
+.hero h1 .l{display:block;overflow:hidden}
+.hero h1 .l span{display:block;transform:translateY(112%)}
+.ready .hero h1 .l span{transform:translateY(0);transition:transform .6s var(--ease)}
+.ready .hero h1 .l:nth-child(2) span{transition-delay:80ms}
+.hero h1 .outline{color:transparent;-webkit-text-stroke:2px var(--paper)}
+.hero-sub{max-width:54ch;font-size:clamp(16px,1.6vw,19px);color:var(--paper-78);margin-top:var(--space-4)}
+.hero-sub b{color:var(--paper);font-weight:700}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:var(--space-5)}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:13px;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:2px;transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease),color var(--dur) var(--ease)}
+.btn:active{transform:translateY(1px)}
+.btn-violet{background:var(--violet);color:#fff}
+.btn-violet:hover{background:var(--violet-down)}
+.btn-ghost{border:1px solid var(--rule-dark);color:var(--paper)}
+.btn-ghost:hover{border-color:var(--lime);color:var(--lime)}
+.hero-meta{display:flex;flex-wrap:wrap;gap:var(--space-3) var(--space-4);margin-top:var(--space-6);font-family:var(--font-mono);font-size:12px;color:var(--paper-50)}
+.hero-meta b{color:var(--paper);font-weight:700}
+.xhair{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .3s var(--ease)}
+.hero.on .xhair{opacity:1}
+.xhair .xv,.xhair .xh{position:absolute;background:rgba(85,66,255,.28)}
+.xhair .xv{top:0;bottom:0;width:1px;left:var(--mx,50%)}
+.xhair .xh{left:0;right:0;height:1px;top:var(--my,50%)}
+.readout{
+  position:absolute;z-index:3;pointer-events:none;
+  left:var(--mx,50%);top:var(--my,50%);
+  transform:translate(14px,14px);
+  font-family:var(--font-mono);font-size:11px;font-weight:700;
+  color:var(--ink);background:var(--lime);
+  padding:4px 8px;white-space:nowrap;
+  opacity:0;transition:opacity .3s var(--ease);
+}
+.hero.on .readout{opacity:1}
+.cropmark{position:absolute;width:22px;height:22px;pointer-events:none}
+.cropmark::before,.cropmark::after{content:"";position:absolute;background:var(--lime)}
+.cropmark::before{width:100%;height:2px}
+.cropmark::after{width:2px;height:100%}
+.cm-tl{top:18px;left:max(16px,calc((100vw - var(--container))/2 - 40px))}
+.cm-tl::before{top:0}.cm-tl::after{left:0}
+.cm-br{bottom:18px;right:max(16px,calc((100vw - var(--container))/2 - 40px))}
+.cm-br::before{bottom:0}.cm-br::after{right:0}
+
+/* ============ 6. TICKER ============ */
+.ticker{border-bottom:1px solid var(--rule-dark);background:var(--ink);overflow:hidden;padding-block:14px}
+.ticker-track{display:flex;gap:48px;width:max-content;animation:marquee 28s linear infinite}
+.ticker:hover .ticker-track{animation-play-state:paused}
+.ticker-track span{font-family:var(--font-mono);font-size:13px;letter-spacing:.06em;color:var(--paper-50);white-space:nowrap}
+.ticker-track b{color:var(--lime);font-weight:400;margin-inline:6px}
+@keyframes marquee{to{transform:translateX(-50%)}}
+
+/* ============ 7. SHARED SECTION SCAFFOLD ============ */
+.sec{padding-block:var(--space-8)}
+.sec-paper{background:var(--paper);color:var(--ink)}
+.sec-dark{background:var(--ink);color:var(--paper);border-bottom:1px solid var(--rule-dark)}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);border-bottom:2px solid currentColor;padding-bottom:var(--space-3);margin-bottom:var(--space-6)}
+.sec-title{font-family:var(--font-display);font-weight:400;text-transform:uppercase;font-size:clamp(32px,4.5vw,56px);line-height:1.02;letter-spacing:.01em}
+.sec-tag{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;opacity:.55}
+
+/* ============ 8. PROBLEM ============ */
+.prob-row{display:grid;grid-template-columns:96px 1fr 1fr;gap:var(--space-4);padding-block:var(--space-5);border-bottom:1px solid var(--rule-paper)}
+.prob-row:first-of-type{border-top:1px solid var(--rule-paper)}
+.prob-num{font-family:var(--font-display);font-size:clamp(40px,5vw,72px);line-height:1;color:var(--violet)}
+.prob-name{font-size:clamp(20px,2.2vw,28px);font-weight:700;letter-spacing:-.01em}
+.prob-name small{display:block;font-family:var(--font-mono);font-size:12px;font-weight:400;color:var(--ink-60);margin-top:6px;letter-spacing:.04em}
+.prob-tells{font-family:var(--font-mono);font-size:13px;line-height:2;color:var(--ink-60)}
+.prob-tells em{font-style:normal;color:var(--ink);background:var(--lime);padding:1px 4px}
+.prob-close{max-width:60ch;margin-top:var(--space-6);font-size:clamp(18px,2vw,24px);line-height:1.4;font-weight:500}
+.prob-close b{background:var(--violet);color:#fff;padding:0 8px;font-weight:700}
+
+/* ============ 9. WORKFLOW ============ */
+.flow{display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:var(--space-6)}
+.flow-left{position:sticky;top:88px;align-self:start}
+.flow-left p{color:var(--ink-60);font-size:15px;margin-top:var(--space-3);max-width:30ch}
+.flow-steps{display:flex;flex-direction:column}
+.step{display:grid;grid-template-columns:88px 1fr;gap:var(--space-4);padding-block:var(--space-5);border-bottom:1px solid var(--rule-paper);align-items:start}
+.step:last-child{border-bottom:0}
+.step-num{font-family:var(--font-display);font-size:clamp(36px,4vw,56px);line-height:1;color:transparent;-webkit-text-stroke:1.5px var(--ink-40)}
+.step:hover .step-num{color:var(--violet);-webkit-text-stroke:1.5px var(--violet);transition:color var(--dur) var(--ease)}
+.step-name{font-family:var(--font-mono);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase}
+.step-desc{margin-top:8px;max-width:52ch;color:var(--ink-60);font-size:15px}
+.step-cmd{display:inline-block;margin-top:12px;font-family:var(--font-mono);font-size:12px;color:var(--ink);background:var(--paper-2);border:1px solid var(--rule-paper);padding:6px 10px;border-radius:2px}
+
+/* ============ 10. DEMO ============ */
+.demo{display:grid;grid-template-columns:1.1fr 1fr;gap:var(--space-6);align-items:start}
+.demo-ref{position:relative;border:1px solid var(--rule-dark);background:var(--ink-2)}
+.demo-ref svg{width:100%;height:auto}
+.demo-ref .bracket{position:absolute;width:20px;height:20px;border:2px solid var(--lime)}
+.br-tl{top:-2px;left:-2px;border-right:0;border-bottom:0}
+.br-br{bottom:-2px;right:-2px;border-left:0;border-top:0}
+.demo-note{position:absolute;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--ink);background:var(--lime);padding:2px 6px}
+.demo-cap{font-family:var(--font-mono);font-size:12px;color:var(--paper-50);margin-top:var(--space-2)}
+.demo-code{background:var(--ink-2);border:1px solid var(--rule-dark);padding:var(--space-4);font-family:var(--font-mono);font-size:12.5px;line-height:1.9;overflow-x:auto}
+.demo-code .tk{color:rgba(231,232,239,.45)}
+.demo-code .tsel{color:#9D8FFF}
+.demo-code .tprop{color:var(--paper-78)}
+.demo-code .tval{color:var(--lime)}
+.demo-code .tcom{color:rgba(231,232,239,.35);font-style:italic}
+
+/* ============ 11. ANTI-SLOP ============ */
+.slop-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6)}
+.gate-list{display:flex;flex-direction:column}
+.gate{display:flex;gap:14px;padding-block:14px;border-bottom:1px solid var(--rule-paper);align-items:baseline}
+.gate svg{flex:none;transform:translateY(2px)}
+.gate span{font-size:15px}
+.gate b{font-weight:700}
+.callout{border:2px solid var(--ink);padding:var(--space-5);margin-top:var(--space-6)}
+.callout h3{font-family:var(--font-display);font-weight:400;text-transform:uppercase;font-size:clamp(24px,3vw,40px);line-height:1.05}
+.callout h3 b{color:var(--violet)}
+.callout p{margin-top:var(--space-2);color:var(--ink-60);max-width:56ch}
+
+/* ============ 12. INSTALL ============ */
+.inst-list{display:flex;flex-direction:column}
+.inst{display:grid;grid-template-columns:200px 1fr auto;gap:var(--space-3);align-items:center;padding-block:var(--space-4);border-bottom:1px solid var(--rule-dark)}
+.inst:first-child{border-top:1px solid var(--rule-dark)}
+.inst-who{font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:.06em}
+.inst-who small{display:block;font-weight:400;font-size:11px;color:var(--paper-50);margin-top:2px}
+.inst-cmd{font-family:var(--font-mono);font-size:12.5px;color:var(--paper-78);background:var(--ink-2);border:1px solid var(--rule-dark);padding:12px 14px;border-radius:2px;overflow-x:auto;white-space:nowrap}
+.inst-cmd .c{color:var(--paper-50)}
+.copy{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--rule-dark);padding:8px 14px;border-radius:2px;transition:border-color var(--dur) var(--ease),color var(--dur) var(--ease)}
+.copy:hover{border-color:var(--lime);color:var(--lime)}
+.copy.done{border-color:var(--lime);color:var(--ink);background:var(--lime)}
+.inst-note{margin-top:var(--space-4);font-family:var(--font-mono);font-size:12px;color:var(--paper-50)}
+.inst-note a{color:var(--lime)}
+
+/* ============ 13. FOOTER ============ */
+.footer{background:var(--ink);border-top:1px solid var(--rule-dark)}
+.footer-in{display:flex;flex-wrap:wrap;gap:var(--space-3) var(--space-5);align-items:center;justify-content:space-between;padding-block:var(--space-5);font-family:var(--font-mono);font-size:12px;color:var(--paper-50)}
+.footer-in a{color:var(--paper-78);text-decoration:none;border-bottom:1px solid var(--rule-dark);transition:color var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.footer-in a:hover{color:var(--lime);border-color:var(--lime)}
+
+/* ============ 14. RESPONSIVE ============ */
+@media (min-width:320px) and (max-width:960px){
+  .prob-row{grid-template-columns:64px 1fr}
+  .prob-tells{grid-column:2}
+  .flow{grid-template-columns:1fr}
+  .flow-left{position:static}
+  .demo{grid-template-columns:1fr}
+  .slop-grid{grid-template-columns:1fr}
+  .inst{grid-template-columns:1fr;gap:10px}
+  .sec{padding-block:var(--space-7)}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .hero h1 .l span{transform:none}
+  .xhair,.readout{display:none}
+}
+@media (max-width:640px){
+  .readout{display:none}
+  .hero h1{font-size:clamp(56px,17vw,96px)}
+  .hero{cursor:auto}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="container topbar-in">
+    <a class="wordmark" href="#hero" aria-label="ui-slicing home">
+      <span class="tick" aria-hidden="true"></span>
+      <b>ui&#8209;slicing</b>
+    </a>
+    <div class="topbar-r">
+      <span class="ver">SKILL&nbsp;v1.1</span>
+      <a class="gh-link" href="https://github.com/viesloxy/ui-slicing" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        Star
+      </a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="hero" aria-label="Introduction">
+  <div class="xhair" aria-hidden="true"><span class="xv"></span><span class="xh"></span></div>
+  <span class="cropmark cm-tl" aria-hidden="true"></span>
+  <span class="cropmark cm-br" aria-hidden="true"></span>
+  <div class="readout" aria-hidden="true">x:0000&nbsp;&nbsp;y:0000</div>
+  <div class="container hero-in">
+    <p class="kicker"><span class="dot" aria-hidden="true"></span> Agent skill &middot; anti-slop by contract</p>
+    <h1>
+      <span class="l"><span>Slice any UI.</span></span>
+      <span class="l"><span class="outline">Ship the code.</span></span>
+    </h1>
+    <p class="hero-sub">Give an AI one screenshot — a Pinterest pin, a Dribbble shot, a SaaS page — and <b>ui&#8209;slicing</b> measures it, extracts the tokens, and rebuilds it as a pixel-faithful, self-contained page. <b>No generic defaults. No invented numbers.</b></p>
+    <div class="cta-row">
+      <a class="btn btn-violet" href="#install">Get the skill ↓</a>
+      <a class="btn btn-ghost" href="https://github.com/viesloxy/ui-slicing" target="_blank" rel="noopener">Star on GitHub ★</a>
+    </div>
+    <div class="hero-meta">
+      <span><b>6</b>-step workflow</span>
+      <span><b>3</b> Pillow scripts</span>
+      <span><b>58</b> slop gates distilled</span>
+      <span><b>1</b> self-contained output</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TICKER ============ -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span>FETCH<b>→</b>ANALYZE<b>→</b>SLICE<b>→</b>TOKENS<b>→</b>BUILD<b>→</b>COMPARE<b>→</b>DELIVER<b>→</b></span>
+    <span>FETCH<b>→</b>ANALYZE<b>→</b>SLICE<b>→</b>TOKENS<b>→</b>BUILD<b>→</b>COMPARE<b>→</b>DELIVER<b>→</b></span>
+  </div>
+</div>
+
+<!-- ============ PROBLEM ============ -->
+<section class="sec sec-paper" id="problem" aria-labelledby="problem-title">
+  <div class="container">
+    <div class="sec-head">
+      <h2 class="sec-title" id="problem-title">Generated UI fails two ways</h2>
+      <span class="sec-tag">Why this exists</span>
+    </div>
+    <div class="prob-row">
+      <div class="prob-num" aria-hidden="true">01</div>
+      <div class="prob-name">Generic defaults
+        <small>It builds what such a design usually looks like</small>
+      </div>
+      <div class="prob-tells">Inter everywhere &middot; purple→blue gradients &middot; gradient headlines &middot; 3-card icon grids &middot; <em>centered-everything heroes</em> &middot; emoji as feature icons &middot; AI nav &amp; footer &middot; bounce easing</div>
+    </div>
+    <div class="prob-row">
+      <div class="prob-num" aria-hidden="true">02</div>
+      <div class="prob-name">Lazy approximation
+        <small>Right structure, wrong numbers</small>
+      </div>
+      <div class="prob-tells">colors that are <em>close, not the color</em> &middot; spacing that "looks about right" &middot; rounded corners everywhere &middot; invented metrics &middot; fonts swapped to favorites &middot; measured 17px normalized to 16</div>
+    </div>
+    <p class="prob-close">ui&#8209;slicing attacks both with two rules: <b>measure, don't guess</b> — and <b>the reference wins</b>, even when it uses purple, Inter, or three equal cards. Slop is inventing. Matching is the job.</p>
+  </div>
+</section>
+
+<!-- ============ WORKFLOW ============ -->
+<section class="sec sec-paper" id="workflow" aria-labelledby="workflow-title" style="padding-top:0">
+  <div class="container">
+    <div class="sec-head">
+      <h2 class="sec-title" id="workflow-title">Six steps. One pass.</h2>
+      <span class="sec-tag">The workflow</span>
+    </div>
+    <div class="flow">
+      <div class="flow-left">
+        <h3 class="mono" style="font-size:13px;letter-spacing:.1em;text-transform:uppercase">Image in →<br>index.html out</h3>
+        <p>Analysis, tokens, and the complete runnable file happen in the same response. The user never asks twice.</p>
+      </div>
+      <div class="flow-steps">
+        <div class="step">
+          <div class="step-num" aria-hidden="true">01</div>
+          <div>
+            <div class="step-name">Acquire</div>
+            <p class="step-desc">Local image or URL — the fetcher pulls Pinterest pins, Dribbble shots, any page via og:image.</p>
+            <code class="step-cmd">python scripts/fetch_reference.py &lt;url&gt;</code>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" aria-hidden="true">02</div>
+          <div>
+            <div class="step-name">Analyze</div>
+            <p class="step-desc">Dimensions, DPR, palette with coverage, section boundaries — then the agent reads every zoomed band crop before writing a single line of code.</p>
+            <code class="step-cmd">python scripts/slice_reference.py ref.png --bands</code>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" aria-hidden="true">03</div>
+          <div>
+            <div class="step-name">Tokens</div>
+            <p class="step-desc">Exact hex, identified fonts, measured spacing — locked into a token block before any component exists. No inline improvisation mid-build.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" aria-hidden="true">04</div>
+          <div>
+            <div class="step-name">Build</div>
+            <p class="step-desc">One section at a time, each checked against its crop immediately. Real text from the reference; placeholders keep the exact aspect ratio and treatment.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" aria-hidden="true">05</div>
+          <div>
+            <div class="step-name">Verify</div>
+            <p class="step-desc">Screenshot vs reference: side-by-side, diff heatmap, per-band scores. Fix the worst bands first, repeat until it matches.</p>
+            <code class="step-cmd">python scripts/compare_screens.py ref.png out.png</code>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" aria-hidden="true">06</div>
+          <div>
+            <div class="step-name">Deliver</div>
+            <p class="step-desc">One self-contained index.html. Deviations and assumptions reported explicitly — never silently.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DEMO ============ -->
+<section class="sec sec-dark dark" id="demo" aria-labelledby="demo-title">
+  <div class="container">
+    <div class="sec-head">
+      <h2 class="sec-title" id="demo-title">See the slice</h2>
+      <span class="sec-tag">Measured, not guessed</span>
+    </div>
+    <div class="demo">
+      <div>
+        <figure class="demo-ref">
+          <span class="bracket br-tl" aria-hidden="true"></span>
+          <span class="bracket br-br" aria-hidden="true"></span>
+          <span class="demo-note" style="top:14%;left:-8px">pad&nbsp;24</span>
+          <span class="demo-note" style="top:44%;right:-10px">r&nbsp;8</span>
+          <span class="demo-note" style="bottom:12%;left:16%">gap&nbsp;16</span>
+          <!-- inline-SVG mock reference: a mini analytics dashboard -->
+          <svg viewBox="0 0 560 400" role="img" aria-label="Mock reference screenshot of a small analytics dashboard, annotated with measured pixel values">
+            <rect width="560" height="400" fill="#191B22"/>
+            <rect width="560" height="44" fill="#101116"/>
+            <rect x="16" y="16" width="56" height="12" rx="2" fill="#E7E8EF" opacity=".9"/>
+            <rect x="440" y="14" width="48" height="16" rx="8" fill="#5542FF"/>
+            <rect x="496" y="14" width="48" height="16" rx="8" fill="none" stroke="#3A3D49"/>
+            <rect x="16" y="60" width="180" height="20" fill="#E7E8EF" opacity=".95"/>
+            <rect x="16" y="88" width="120" height="10" fill="#8A8D9C" opacity=".7"/>
+            <rect x="16" y="118" width="256" height="96" rx="8" fill="#22242D"/>
+            <rect x="288" y="118" width="256" height="96" rx="8" fill="#22242D"/>
+            <polyline points="32,196 76,180 120,188 164,160 208,168 252,140" fill="none" stroke="#EDFF67" stroke-width="2"/>
+            <rect x="300" y="134" width="64" height="10" fill="#8A8D9C" opacity=".7"/>
+            <rect x="300" y="154" width="96" height="26" rx="2" fill="#5542FF"/>
+            <rect x="16" y="238" width="528" height="34" rx="2" fill="#101116"/>
+            <text x="28" y="260" font-family="monospace" font-size="12" fill="#8A8D9C">revenue&nbsp;·&nbsp;last&nbsp;30d</text>
+            <rect x="16" y="288" width="528" height="44" rx="2" fill="#22242D"/>
+            <rect x="16" y="340" width="528" height="44" rx="2" fill="#22242D"/>
+            <rect x="28" y="302" width="20" height="16" rx="8" fill="#3A3D49"/>
+            <rect x="60" y="306" width="150" height="9" fill="#B9BCC9" opacity=".85"/>
+            <rect x="28" y="354" width="20" height="16" rx="8" fill="#3A3D49"/>
+            <rect x="60" y="358" width="190" height="9" fill="#B9BCC9" opacity=".85"/>
+            <rect x="468" y="304" width="64" height="12" rx="2" fill="#EDFF67" opacity=".9"/>
+            <rect x="468" y="356" width="52" height="12" rx="2" fill="#8A8D9C" opacity=".7"/>
+          </svg>
+        </figure>
+        <p class="demo-cap">FIG.01 — reference.png · 1440×400 region · palette: 3 ink steps + #5542FF + #EDFF67 · radius 8 · gap 16</p>
+      </div>
+      <div class="demo-code" aria-label="The rebuilt code for the same design">
+<span class="tcom">/* tokens — sampled from the image, not remembered */</span><br>
+<span class="tsel">:root</span> <span class="tk">{</span><br>
+&nbsp;&nbsp;<span class="tprop">--surface</span><span class="tk">:</span> <span class="tval">#191B22</span><span class="tk">;</span><br>
+&nbsp;&nbsp;<span class="tprop">--card</span><span class="tk">:</span> <span class="tval">#22242D</span><span class="tk">;</span><br>
+&nbsp;&nbsp;<span class="tprop">--accent</span><span class="tk">:</span> <span class="tval">#5542FF</span><span class="tk">;</span><br>
+&nbsp;&nbsp;<span class="tprop">--signal</span><span class="tk">:</span> <span class="tval">#EDFF67</span><span class="tk">;</span><br>
+&nbsp;&nbsp;<span class="tprop">--radius</span><span class="tk">:</span> <span class="tval">8px</span><span class="tk">;</span>&nbsp;&nbsp;<span class="tcom">/* measured */</span><br>
+&nbsp;&nbsp;<span class="tprop">--gap</span><span class="tk">:</span> <span class="tval">16px</span><span class="tk">;</span>&nbsp;&nbsp;<span class="tcom">/* measured */</span><br>
+<span class="tk">}</span><br>
+<br>
+<span class="tsel">.stat-card</span> <span class="tk">{</span><br>
+&nbsp;&nbsp;<span class="tprop">background</span><span class="tk">:</span> <span class="tval">var(--card)</span><span class="tk">;</span><br>
+&nbsp;&nbsp;<span class="tprop">border-radius</span><span class="tk">:</span> <span class="tval">var(--radius)</span><span class="tk">;</span><br>
+&nbsp;&nbsp;<span class="tprop">padding</span><span class="tk">:</span> <span class="tval">16px</span><span class="tk">;</span><br>
+<span class="tk">}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ANTI-SLOP ============ -->
+<section class="sec sec-paper" id="slop" aria-labelledby="slop-title">
+  <div class="container">
+    <div class="sec-head">
+      <h2 class="sec-title" id="slop-title">Slop is inventing. Not matching.</h2>
+      <span class="sec-tag">58 gates, distilled</span>
+    </div>
+    <div class="slop-grid">
+      <div class="gate-list" aria-label="Fidelity gates">
+        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>Fidelity</b> — colors, fonts, spacing within 5% of measured; every section in order; text verbatim.</span></div>
+        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>No injection</b> — nothing enters the build that isn't in the reference.</span></div>
+        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>No invented content</b> — fake metrics and testimonials are slop, always.</span></div>
+      </div>
+      <div class="gate-list" aria-label="Quality floor gates">
+        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>Detail parity</b> — input states, focus rings, empty states weigh as much as the hero.</span></div>
+        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>Quality floor</b> — responsive 320–1920, focus-visible, contrast, reduced-motion.</span></div>
+        <div class="gate"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 8l4 4 8-10" fill="none" stroke="#5542FF" stroke-width="2.5"/></svg><span><b>Self-critique</b> — six axes scored before delivery; anything under 3 gets revised.</span></div>
+      </div>
+    </div>
+    <div class="callout">
+      <h3>The reference wins<b>.</b></h3>
+      <p>If the design uses three equal cards, purple, or a centered hero — replicate it exactly. Those are only "tells" when the AI invents them. Here they are the design. Never silently improve the reference.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INSTALL ============ -->
+<section class="sec sec-dark dark" id="install" aria-labelledby="install-title">
+  <div class="container">
+    <div class="sec-head">
+      <h2 class="sec-title" id="install-title">Install</h2>
+      <span class="sec-tag">Works where you work</span>
+    </div>
+    <div class="inst-list">
+      <div class="inst">
+        <div class="inst-who">pi<small>agent skills dir</small></div>
+        <code class="inst-cmd"><span class="c">$</span> cp -r ui-slicing ~/.pi/agent/skills/</code>
+        <button class="copy" data-copy="cp -r ui-slicing ~/.pi/agent/skills/">COPY</button>
+      </div>
+      <div class="inst">
+        <div class="inst-who">Claude Code<small>~/.claude/skills</small></div>
+        <code class="inst-cmd"><span class="c">$</span> cp -r ui-slicing ~/.claude/skills/</code>
+        <button class="copy" data-copy="cp -r ui-slicing ~/.claude/skills/">COPY</button>
+      </div>
+      <div class="inst">
+        <div class="inst-who">Codex<small>~/.codex/skills</small></div>
+        <code class="inst-cmd"><span class="c">$</span> cp -r ui-slicing ~/.codex/skills/</code>
+        <button class="copy" data-copy="cp -r ui-slicing ~/.codex/skills/">COPY</button>
+      </div>
+      <div class="inst">
+        <div class="inst-who">Gemini · ChatGPT<small>no skills system needed</small></div>
+        <code class="inst-cmd"><span class="c">$</span> upload SKILL.md + references/ with your image</code>
+        <button class="copy" data-copy="Attach SKILL.md and the references/ folder together with your reference image, then ask: slice this UI.">COPY</button>
+      </div>
+    </div>
+    <p class="inst-note">Scripts need <a href="https://pypi.org/project/Pillow/" target="_blank" rel="noopener">Pillow</a> — <span class="mono">pip install Pillow</span>. Full docs in the <a href="https://github.com/viesloxy/ui-slicing#readme" target="_blank" rel="noopener">README</a>.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container footer-in">
+    <span>ui&#8209;slicing — MIT — © 2026 Vito Aditya</span>
+    <span>distilled from v0 · bolt · same.dev · hallmark · anthropic skills · refactoring ui</span>
+    <a href="https://github.com/viesloxy/ui-slicing" target="_blank" rel="noopener">github.com/viesloxy/ui-slicing</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var hero=document.getElementById('hero');
+  var fine=window.matchMedia('(pointer:fine)').matches;
+  var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(hero&&fine&&!reduced){
+    var xv=hero.querySelector('.xv'),xh=hero.querySelector('.xh'),out=hero.querySelector('.readout');
+    hero.addEventListener('pointermove',function(e){
+      var r=hero.getBoundingClientRect();
+      var x=Math.round(e.clientX-r.left),y=Math.round(e.clientY-r.top);
+      hero.style.setProperty('--mx',x+'px');
+      hero.style.setProperty('--my',y+'px');
+      if(out)out.textContent='x:'+String(x).padStart(4,'0')+'\u00a0\u00a0y:'+String(y).padStart(4,'0');
+    });
+    hero.addEventListener('pointerenter',function(){hero.classList.add('on');});
+    hero.addEventListener('pointerleave',function(){hero.classList.remove('on');});
+  }
+  document.addEventListener('DOMContentLoaded',function(){
+    requestAnimationFrame(function(){document.documentElement.classList.add('ready');});
+  });
+  if(document.readyState!=='loading'){document.documentElement.classList.add('ready');}
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var txt=btn.getAttribute('data-copy')||'';
+      function done(){btn.textContent='COPIED';btn.classList.add('done');
+        setTimeout(function(){btn.textContent='COPY';btn.classList.remove('done');},1600);}
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,done);}
+      else{var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}
+    });
+  });
+})();
+</script>
+</body>
+</html>
