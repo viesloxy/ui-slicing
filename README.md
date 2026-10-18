@@ -1,5 +1,7 @@
 # 🎯 UI Slicing — pixel-perfect UI replication from any reference image
 
+**[▶ Live landing page](https://viesloxy.github.io/ui-slicing/)** — the page itself is built by the workflow it documents.
+
 An [Agent Skills](https://agentskills.io)-compatible skill + toolkit that turns a UI reference image — a Pinterest pin, a Dribbble shot, a SaaS screenshot, anything — into **pixel-faithful front-end code**, with a built-in **anti-AI-slop system** that keeps generated output from drifting into generic "AI look".
 
 Works with: **pi · Claude Code · Codex · Gemini · ChatGPT** (any agent that can read a SKILL.md and run Python).
