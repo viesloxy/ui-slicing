@@ -4,7 +4,7 @@
 
 An [Agent Skills](https://agentskills.io)-compatible skill + toolkit that turns a UI reference image — a Pinterest pin, a Dribbble shot, a SaaS screenshot, anything — into **pixel-faithful front-end code**, with a built-in **anti-AI-slop system** that keeps generated output from drifting into generic "AI look".
 
-Works with: **pi · Claude Code · Codex · Gemini · ChatGPT** (any agent that can read a SKILL.md and run Python).
+Works with: **Gemini · ChatGPT · Claude · Copilot · MiniMax · Grok** (chat — just attach the files) and **Cursor · Claude Code · Codex · Gemini CLI · VS Code · Copilot · pi · OpenCode · Cline · Kilo Code · Windsurf · Roo Code** + 40 more tools that read the [Agent Skills](https://agentskills.io/clients) standard.
 
 ---
 
@@ -24,7 +24,8 @@ ui-slicing/
 ├── SKILL.md                          # the 6-step workflow the agent follows
 ├── references/
 │   ├── analysis-protocol.md          # measuring technique: px → tokens, font identification + substitution table
-│   └── anti-slop-checklist.md        # fidelity gates, injection tells, quality floor, self-critique
+│   ├── anti-slop-checklist.md        # fidelity gates, injection tells, quality floor, self-critique
+│   └── output-contract.md            # locked deliverable spec: one self-contained index.html
 └── scripts/
     ├── fetch_reference.py            # download reference from URL (og:image → Pinterest/Dribbble/blog pages)
     ├── slice_reference.py            # analyze: dimensions, DPR, palette (hex + coverage), section detection; save zoomed band crops
@@ -35,19 +36,34 @@ Requires [Pillow](https://pypi.org/project/Pillow/) for the scripts: `pip instal
 
 ## Install
 
-**pi** — copy to the skills directory (or register the folder):
+### Generative AI — chat, no install
+
+**Gemini · ChatGPT · Claude · Copilot · MiniMax · Grok** — attach `SKILL.md` + the `references/` folder together with your reference image, then ask: *"slice this UI"*. Paste the script contents too if the model can run code.
+
+### Coding agents & IDEs — skills directory
+
+```bash
+cp -r ui-slicing ~/.agents/skills/
+```
+
+Works for any agent that reads the Agent Skills standard — **Cursor, Claude Code, Codex, Gemini CLI, GitHub Copilot, VS Code, Antigravity, Cline, Kilo Code, Kimi, Windsurf, Roo Code, TRAE, Kiro** and more. Native dirs also fine:
+
+```bash
+cp -r ui-slicing ~/.claude/skills/   # Claude Code
+cp -r ui-slicing .cursor/skills/     # Cursor (project-level)
+cp -r ui-slicing ~/.gemini/skills/   # Gemini CLI
+cp -r ui-slicing ~/.codex/skills/    # Codex
+```
+
+### Agent harnesses — terminal-native
+
+**pi · OpenCode · Amp · Goose · OpenHands** and others — the standard dir above works; pi also scans `~/.pi/agent/skills/`:
+
 ```bash
 cp -r ui-slicing ~/.pi/agent/skills/
 ```
 
-**Claude Code / Codex** — same Agent Skills format:
-```bash
-cp -r ui-slicing ~/.claude/skills/    # or ~/.codex/skills/
-```
-
-**Gemini / ChatGPT / any chat model** — no skills system needed:
-1. Upload `SKILL.md` (plus the two `references/*.md` files for best results) with your reference image
-2. Paste the script contents if the model can run code; otherwise the workflow alone already improves fidelity a lot
+> 46+ tools support the Agent Skills standard — see the [client list](https://agentskills.io/clients). Path differs per tool; check your tool's docs.
 
 ## The workflow
 
