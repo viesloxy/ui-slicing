@@ -248,10 +248,19 @@ html.pinning .flow-viewport{overflow:hidden}
 .install-panel .glowwrap .g1{width:420px;height:420px;background:var(--peri);top:-140px;right:-120px;opacity:.3}
 .install-panel h2{font-family:var(--font-display);font-weight:700;font-size:clamp(30px,4vw,52px);letter-spacing:-.035em;position:relative}
 .install-panel h2 .serif{font-weight:400}
-.install-list{margin-top:var(--s5);position:relative}
-.inst{display:grid;grid-template-columns:200px 1fr auto;gap:var(--s3);align-items:center;padding-block:18px;border-bottom:1px solid rgba(255,255,255,.1);border-radius:14px;transition:background var(--dur) var(--ease)}
+.inst-list{margin-top:var(--s5);position:relative}
+.inst-group{margin-top:var(--s4)}
+.inst-group:first-child{margin-top:0}
+.inst-group h3{font-family:var(--font-display);font-weight:600;font-size:19px;letter-spacing:-.02em;margin-bottom:12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.inst-group h3 small{font-weight:400;font-size:13.5px;color:rgba(255,255,255,.45);letter-spacing:0}
+.inst{display:grid;grid-template-columns:210px 1fr auto;gap:var(--s3);align-items:center;padding-block:16px;border-bottom:1px solid rgba(255,255,255,.1);border-radius:14px;transition:background var(--dur) var(--ease)}
 .inst:first-child{border-top:1px solid rgba(255,255,255,.1)}
 .inst:hover{background:rgba(255,255,255,.05)}
+.toolchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.toolchips span{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:500;color:rgba(255,255,255,.85)}
+.toolchips span.star{border-color:rgba(143,164,255,.5);color:#fff}
+.dir-note{margin-top:14px;font-size:13px;color:rgba(255,255,255,.45)}
+.dir-note code{font-family:ui-monospace,monospace;font-size:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);padding:2px 8px;border-radius:6px}
 .inst-who{font-weight:600;font-size:16px;padding-left:14px}
 .inst-who small{display:block;font-weight:400;font-size:12.5px;color:rgba(255,255,255,.45);margin-top:2px}
 .inst-cmd{font-family:ui-monospace,monospace;font-size:13px;color:rgba(255,255,255,.85);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);padding:13px 16px;border-radius:12px;overflow-x:auto;white-space:nowrap;min-width:0}
@@ -302,7 +311,7 @@ html.pinning .flow-viewport{overflow:hidden}
   .chipcard{display:none}
   .inst{grid-template-columns:1fr;gap:10px}
   .inst-who{padding-left:0}
-  .copy{margin-right:0;justify-self:end}
+  .copy{margin-right:0;justify-self:start}
   .inst-note{padding-left:0}
 }
 @media (prefers-reduced-motion:reduce){
@@ -528,25 +537,33 @@ html.pinning .flow-viewport{overflow:hidden}
       <div class="glowwrap" aria-hidden="true"><span class="glow g1"></span></div>
       <h2 id="install-title">Install <em class="serif">once.</em> Slice forever.</h2>
       <div class="install-list">
-        <div class="inst">
-          <div class="inst-who">pi<small>agent skills dir</small></div>
-          <code class="inst-cmd"><span class="c">$</span> cp -r ui-slicing ~/.pi/agent/skills/</code>
-          <button class="copy" data-copy="cp -r ui-slicing ~/.pi/agent/skills/">COPY</button>
+        <div class="inst-group">
+          <h3>Generative AI <small>— chat, no install</small></h3>
+          <div class="inst">
+            <div class="inst-who">Gemini · ChatGPT · Claude · Copilot · MiniMax · Grok<small>upload &amp; ask</small></div>
+            <code class="inst-cmd">attach SKILL.md + references/ with your image, then: slice this UI</code>
+            <button class="copy" data-copy="Attach SKILL.md and the references/ folder together with your reference image, then ask: slice this UI.">COPY</button>
+          </div>
         </div>
-        <div class="inst">
-          <div class="inst-who">Claude Code<small>~/.claude/skills</small></div>
-          <code class="inst-cmd"><span class="c">$</span> cp -r ui-slicing ~/.claude/skills/</code>
-          <button class="copy" data-copy="cp -r ui-slicing ~/.claude/skills/">COPY</button>
+        <div class="inst-group">
+          <h3>Coding agents &amp; IDEs <small>— skills directory</small></h3>
+          <div class="inst">
+            <div class="inst-who">Cursor · Claude Code · Codex · Gemini CLI · Copilot · VS Code<small>+ Antigravity · Cline · Kilo Code · Kimi · Windsurf · Roo · TRAE · Kiro</small></div>
+            <code class="inst-cmd"><span class="c">$</span> cp -r ui-slicing ~/.agents/skills/</code>
+            <button class="copy" data-copy="cp -r ui-slicing ~/.agents/skills/">COPY</button>
+          </div>
+          <div class="dir-note">Any agent that reads the Agent Skills standard works. Native dirs also fine — <code>~/.claude/skills</code> · <code>.cursor/skills</code> · <code>~/.gemini/skills</code> · <code>~/.codex/skills</code> — check your tool's docs.</div>
         </div>
-        <div class="inst">
-          <div class="inst-who">Codex<small>~/.codex/skills</small></div>
-          <code class="inst-cmd"><span class="c">$</span> cp -r ui-slicing ~/.codex/skills/</code>
-          <button class="copy" data-copy="cp -r ui-slicing ~/.codex/skills/">COPY</button>
-        </div>
-        <div class="inst">
-          <div class="inst-who">Gemini · ChatGPT<small>no skills system needed</small></div>
-          <code class="inst-cmd"><span class="c">$</span> upload SKILL.md + references/ with your image</code>
-          <button class="copy" data-copy="Attach SKILL.md and the references/ folder together with your reference image, then ask: slice this UI.">COPY</button>
+        <div class="inst-group">
+          <h3>Agent harnesses <small>— terminal-native</small></h3>
+          <div class="inst">
+            <div class="inst-who">pi · OpenCode · Amp · Goose · OpenHands<small>and 40+ more</small></div>
+            <code class="inst-cmd"><span class="c">$</span> cp -r ui-slicing ~/.agents/skills/</code>
+            <button class="copy" data-copy="cp -r ui-slicing ~/.agents/skills/">COPY</button>
+          </div>
+          <div class="toolchips" aria-label="Tools that support the Agent Skills standard">
+            <span class="star">Cursor</span><span class="star">Claude Code</span><span class="star">Codex</span><span class="star">Gemini CLI</span><span class="star">GitHub Copilot</span><span class="star">VS Code</span><span>Antigravity</span><span>Cline</span><span>Kilo Code</span><span>Kimi</span><span>Windsurf</span><span>Roo Code</span><span>TRAE</span><span>Kiro</span><span>Goose</span><span>Amp</span><span>OpenCode</span><span>pi</span><span>Junie</span><span>Qodo</span><span>Tabnine</span><span>Factory</span><span>+ 25 more on agentskills.io</span>
+          </div>
         </div>
       </div>
       <p class="inst-note">Scripts need <a href="https://pypi.org/project/Pillow/" target="_blank" rel="noopener">Pillow</a> — <span style="font-family:ui-monospace,monospace">pip install Pillow</span>. Full docs in the <a href="https://github.com/viesloxy/ui-slicing#readme" target="_blank" rel="noopener">README</a>.</p>
